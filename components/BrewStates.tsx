@@ -24,17 +24,17 @@ export function LoadingStages({ query }: { query: string }) {
     <div className="flex min-h-[70dvh] flex-col justify-center" role="status" aria-live="polite">
       <div className="relative mx-auto h-36 w-28" aria-hidden>
         {/* A cup filling, the one piece of ambient motion in the app. */}
-        <div className="absolute inset-x-0 bottom-0 h-28 overflow-hidden rounded-b-[2.5rem] rounded-t-md border-2 border-milk/80">
+        <div className="absolute inset-x-0 bottom-0 h-28 overflow-hidden rounded-b-[2.5rem] rounded-t-md border-2 border-ink/70">
           <div className="absolute inset-0 origin-bottom animate-pour bg-gradient-to-t from-roast-dark via-roast-medium to-[#d9b48c]" />
         </div>
-        <div className="absolute -right-5 bottom-10 h-10 w-6 rounded-r-full border-2 border-l-0 border-milk/80" />
+        <div className="absolute -right-5 bottom-10 h-10 w-6 rounded-r-full border-2 border-l-0 border-ink/70" />
         <div className="absolute left-1/2 top-0 h-8 w-1 -translate-x-1/2 animate-pulse rounded-full bg-roast-medium" />
       </div>
       <p className="mt-10 text-center text-muted">Looking up</p>
       <p className="mt-1 text-center text-2xl font-semibold text-balance">{query}</p>
       <ol className="mx-auto mt-8 space-y-2 text-[0.95rem]">
         {STAGES.map((s, i) => (
-          <li key={s} className={`flex items-center gap-3 transition-colors ${i < stage ? "text-muted" : i === stage ? "text-milk" : "text-muted/40"}`}>
+          <li key={s} className={`flex items-center gap-3 transition-colors ${i < stage ? "text-muted" : i === stage ? "text-ink" : "text-muted/40"}`}>
             <span className={`size-2 rounded-full ${i < stage ? "bg-sage" : i === stage ? "animate-pulse bg-cascara" : "bg-line"}`} />
             {s}
           </li>
@@ -73,7 +73,7 @@ export function AccessGate({ onSubmit, wrong }: { onSubmit: () => void; wrong: b
         className="mt-2 min-h-12 rounded-xl border border-line bg-surface px-4 text-lg focus:border-cascara/70 focus:outline-none"
       />
       {wrong && <p className="mt-3 text-cascara">That code didn’t match. Check it and try again.</p>}
-      <button type="submit" disabled={!code.trim()} className="mt-6 min-h-12 rounded-xl bg-cascara font-semibold text-ristretto disabled:opacity-40">
+      <button type="submit" disabled={!code.trim()} className="mt-6 min-h-12 rounded-xl bg-cascara font-semibold text-paper disabled:bg-surface-2 disabled:text-muted">
         Unlock
       </button>
     </form>
@@ -87,7 +87,7 @@ export function ErrorState({ title, message, onRetry }: { title: string; message
       <p className="mt-3 leading-relaxed text-muted">{message}</p>
       <div className="mt-8 flex gap-3">
         {onRetry && (
-          <button type="button" onClick={onRetry} className="min-h-12 flex-1 rounded-xl bg-cascara font-semibold text-ristretto">
+          <button type="button" onClick={onRetry} className="min-h-12 flex-1 rounded-xl bg-cascara font-semibold text-paper">
             Try again
           </button>
         )}

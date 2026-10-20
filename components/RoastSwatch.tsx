@@ -21,7 +21,7 @@ export function RoastDot({ roast, className = "size-10" }: { roast: RoastLevel; 
   return (
     <span
       aria-hidden
-      className={`${ROAST_BG[roast]} ${className} inline-block shrink-0 rounded-[45%_55%_50%_50%/55%_50%_50%_45%] ring-1 ring-white/10`}
+      className={`${ROAST_BG[roast]} ${className} inline-block shrink-0 rounded-[45%_55%_50%_50%/55%_50%_50%_45%] ring-1 ring-black/10`}
     />
   );
 }
@@ -31,14 +31,14 @@ export function RoastRamp({ roast }: { roast: RoastLevel }) {
   const index = ROAST_LEVELS.indexOf(roast);
   return (
     <figure>
-      <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`Roast level: ${ROAST_LABEL[roast]}`}>
+      <div className="flex h-2.5 gap-1" role="img" aria-label={`Roast level: ${ROAST_LABEL[roast]}`}>
         {ROAST_LEVELS.map((level, i) => (
-          <span key={level} className={`${ROAST_BG[level]} flex-1 ${i === index ? "ring-2 ring-milk ring-inset" : "opacity-70"}`} />
+          <span key={level} className={`${ROAST_BG[level]} flex-1 rounded-full ${i === index ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`} />
         ))}
       </div>
       <figcaption className="mt-2 flex justify-between text-xs text-muted">
         <span>Light</span>
-        <span className="text-milk">{ROAST_LABEL[roast]} roast</span>
+        <span className="text-ink">{ROAST_LABEL[roast]} roast</span>
         <span>Dark</span>
       </figcaption>
     </figure>

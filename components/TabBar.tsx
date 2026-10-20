@@ -33,7 +33,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ristretto/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
     >
       <ul className="mx-auto flex max-w-xl">
         {TABS.map((tab) => {
@@ -44,7 +44,7 @@ export function TabBar() {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
-                  active ? "text-milk" : "text-muted hover:text-milk"
+                  active ? "text-ink" : "text-muted hover:text-ink"
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>

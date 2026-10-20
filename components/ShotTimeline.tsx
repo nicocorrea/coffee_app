@@ -15,21 +15,21 @@ export function ShotTimeline({ recipe }: { recipe: BaseRecipe }) {
       >
         {pre > 0 && <span className="absolute inset-y-0 left-0 rounded-l-xl bg-sage/80" style={{ width: pct(pre) }} />}
         <span
-          className="absolute inset-y-0 bg-cascara/30"
+          className="absolute inset-y-0 bg-roast-light/45"
           style={{ left: pct(pre), width: `calc(${pct(recipe.timeMin)} - ${pct(pre)})` }}
         />
         <span
           className="absolute inset-y-0 rounded-r-md bg-cascara"
           style={{ left: pct(recipe.timeMin), width: `calc(${pct(recipe.timeMax)} - ${pct(recipe.timeMin)})` }}
         />
-        <span className="absolute inset-y-0 w-px bg-milk/70" style={{ left: pct(recipe.timeMax) }} />
+        <span className="absolute inset-y-0 w-px bg-ink/60" style={{ left: pct(recipe.timeMax) }} />
       </div>
       <div className="numerals relative mt-2 h-5 text-sm text-muted">
         <span className="absolute left-0">0 s</span>
-        <span className="absolute -translate-x-1/2 text-milk" style={{ left: pct(recipe.timeMin) }}>
+        <span className="absolute -translate-x-1/2 text-ink" style={{ left: pct(recipe.timeMin) }}>
           {recipe.timeMin}
         </span>
-        <span className="absolute -translate-x-1/2 text-milk" style={{ left: pct(recipe.timeMax) }}>
+        <span className="absolute -translate-x-1/2 text-ink" style={{ left: pct(recipe.timeMax) }}>
           {recipe.timeMax} s
         </span>
       </div>

@@ -42,7 +42,7 @@ export function FlavourRadar({ flavour }: { flavour: BeanProfile["flavour"] }) {
         const anchor = Math.abs(x - W / 2) < 4 ? "middle" : x > W / 2 ? "start" : "end";
         return (
           <text key={key} x={x} y={i === 0 ? y - 6 : y + 4} textAnchor={anchor} dominantBaseline="middle" fontSize={13} fill="var(--color-muted)">
-            {label} <tspan fill="var(--color-milk)">{flavour[key]}</tspan>
+            {label} <tspan fill="var(--color-ink)">{flavour[key]}</tspan>
           </text>
         );
       })}

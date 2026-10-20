@@ -38,12 +38,12 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Roaster and coffee"
-          className="min-h-12 w-full min-w-0 bg-transparent text-lg text-milk placeholder:text-muted/70 focus:outline-none"
+          className="min-h-12 w-full min-w-0 bg-transparent text-lg text-ink placeholder:text-muted/70 focus:outline-none"
         />
         <button
           type="submit"
           disabled={trimmed.length < 2}
-          className="min-h-12 shrink-0 rounded-xl bg-cascara px-5 text-base font-semibold text-ristretto transition-opacity disabled:opacity-40"
+          className="min-h-12 shrink-0 rounded-xl bg-cascara px-5 text-base font-semibold text-paper transition-colors disabled:bg-surface-2 disabled:text-muted"
         >
           Dial in
         </button>
@@ -55,7 +55,7 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
             key={ex}
             type="button"
             onClick={() => go(ex)}
-            className="min-h-10 shrink-0 rounded-full border border-line px-4 text-sm text-muted transition-colors hover:border-muted hover:text-milk"
+            className="min-h-10 shrink-0 rounded-full border border-line px-4 text-sm text-muted transition-colors hover:border-muted hover:text-ink"
           >
             {ex}
           </button>

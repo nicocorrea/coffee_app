@@ -40,8 +40,8 @@ export function BrewView({ result }: { result: BrewResult }) {
 
   return (
     <article>
-      <div className="sticky top-0 z-30 -mx-5 flex items-center justify-between bg-ristretto/95 px-3 py-2 backdrop-blur-xl">
-        <Link href="/" className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-muted hover:text-milk">
+      <div className="sticky top-0 z-30 -mx-5 flex items-center justify-between bg-paper/95 px-3 py-2 backdrop-blur-xl">
+        <Link href="/" className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-muted hover:text-ink">
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
             <path d="M15 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -52,7 +52,7 @@ export function BrewView({ result }: { result: BrewResult }) {
           onClick={() => toggleFavourite(result)}
           aria-pressed={saved}
           className={`flex min-h-11 items-center gap-2 rounded-xl px-4 font-medium transition-colors ${
-            saved ? "bg-cascara text-ristretto" : "bg-surface-2 text-milk"
+            saved ? "bg-cascara text-paper" : "bg-surface-2 text-ink"
           }`}
         >
           <svg viewBox="0 0 24 24" className="size-5" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} aria-hidden>
@@ -84,7 +84,7 @@ export function BrewView({ result }: { result: BrewResult }) {
         <p className="numerals mt-1 flex items-baseline gap-3 font-bold leading-none">
           <span className="text-[4.5rem] text-cascara">{recipe.yieldG}</span>
           <span className="text-2xl text-muted">g out</span>
-          <span className="ml-auto text-2xl font-medium text-milk">
+          <span className="ml-auto text-2xl font-medium text-ink">
             1:{Number((recipe.yieldG / recipe.doseG).toFixed(1))}
           </span>
         </p>
@@ -198,7 +198,7 @@ export function BrewView({ result }: { result: BrewResult }) {
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
             {sources.map((s) => (
               <li key={s.url}>
-                <a href={s.url} target="_blank" rel="noreferrer" className="underline decoration-line underline-offset-4 hover:text-milk">
+                <a href={s.url} target="_blank" rel="noreferrer" className="underline decoration-line underline-offset-4 hover:text-ink">
                   {s.host}
                 </a>
               </li>
@@ -206,7 +206,7 @@ export function BrewView({ result }: { result: BrewResult }) {
           </ul>
         )}
         <div className="mt-10">
-          <p className="mb-3 text-base text-milk">Not quite the right coffee?</p>
+          <p className="mb-3 text-base text-ink">Not quite the right coffee?</p>
           <SearchBox initial={result.query} />
         </div>
       </footer>

@@ -11,9 +11,9 @@ export function SavedList({ variant }: { variant: "strip" | "list" }) {
   if (favourites.length === 0) {
     return variant === "list" ? (
       <div className="rounded-2xl border border-dashed border-line p-6 text-muted">
-        <p className="text-milk">No saved coffees yet.</p>
+        <p className="text-ink">No saved coffees yet.</p>
         <p className="mt-1">Look up a bag and tap Save to keep its recipe here. Saved recipes open instantly, even offline.</p>
-        <Link href="/" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-surface-2 px-4 font-medium text-milk">
+        <Link href="/" className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-surface-2 px-4 font-medium text-ink">
           Search coffees
         </Link>
       </div>
@@ -59,7 +59,7 @@ export function SavedList({ variant }: { variant: "strip" | "list" }) {
               </span>
             </span>
             <span className="numerals shrink-0 text-right text-sm text-muted">
-              <span className="block text-base text-milk">{r.recipe.tempC} °C</span>
+              <span className="block text-base text-ink">{r.recipe.tempC} °C</span>
               {r.recipe.doseG}→{r.recipe.yieldG} g
             </span>
           </Link>

@@ -12,11 +12,11 @@ const bricolage = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: { default: "Crema", template: "%s | Crema" },
   description: "Search any coffee and get Meraki Gen 2 settings, flavour notes and drink recipes.",
-  appleWebApp: { capable: true, title: "Crema", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Crema", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a120e",
+  themeColor: "#fbf8f5",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

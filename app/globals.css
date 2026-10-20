@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ristretto: #1a120e;
-  --color-surface: #261a14;
-  --color-surface-2: #33241c;
-  --color-line: #43312a;
-  --color-milk: #f2e8dc;
-  --color-muted: #a8968a;
-  --color-cascara: #c9705f;
-  --color-sage: #a9b18f;
+  /* Porcelain cup, latte foam and ristretto ink; cascara (the coffee-cherry husk) as the accent. */
+  --color-paper: #fbf8f5;
+  --color-surface: #f3ece5;
+  --color-surface-2: #eae0d6;
+  --color-line: #ded2c6;
+  --color-ink: #2a1c15;
+  --color-muted: #7a675b;
+  --color-cascara: #a84f3a;
+  --color-sage: #8c9873;
 
   --color-roast-light: #b07b4f;
   --color-roast-medium-light: #8e5a36;
@@ -27,17 +28,17 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
-  background: var(--color-ristretto);
+  background: var(--color-paper);
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--color-ristretto);
-  color: var(--color-milk);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;

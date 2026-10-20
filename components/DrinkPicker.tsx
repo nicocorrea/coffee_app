@@ -22,7 +22,7 @@ export function DrinkPicker({ drinks, best = [] }: { drinks: DrinkRecipe[]; best
               aria-controls="drink-panel"
               onClick={() => setSelected(d.id)}
               className={`min-h-11 shrink-0 snap-start rounded-full px-4 text-[0.95rem] font-medium transition-colors ${
-                active ? "bg-milk text-ristretto" : "border border-line text-muted hover:text-milk"
+                active ? "bg-ink text-paper" : "border border-line text-muted hover:text-ink"
               }`}
             >
               {d.name}
