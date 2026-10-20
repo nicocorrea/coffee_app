@@ -81,6 +81,24 @@ describe("fetchBeanProfile", () => {
     expect(err.code).toBe("bad_model_output");
   });
 
+  it("bounds every request with one overall deadline", async () => {
+    const { client, create } = fakeClient([msg("…", "pause_turn"), msg(json)]);
+    await fetchBeanProfile("Guji", client);
+    const [first, second] = create.mock.calls.map((c) => c[1]?.signal);
+    expect(first).toBeInstanceOf(AbortSignal);
+    expect(second).toBe(first);
+  });
+
+  it("reports a timeout as a retryable upstream error", async () => {
+    const err = Object.assign(new Error("Request was aborted."), { name: "APIUserAbortError" });
+    const create = vi.fn().mockRejectedValue(err);
+    const client = { beta: { messages: { create, parse: vi.fn() } } } as unknown as Anthropic;
+    await expect(fetchBeanProfile("Guji", client, { signal: AbortSignal.abort() })).rejects.toMatchObject({
+      code: "upstream",
+      message: expect.stringContaining("too long"),
+    });
+  });
+
   it("wraps SDK failures as upstream errors", async () => {
     const create = vi.fn().mockRejectedValue(new Error("socket hang up"));
     const client = { beta: { messages: { create, parse: vi.fn() } } } as unknown as Anthropic;

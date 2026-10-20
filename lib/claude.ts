@@ -5,6 +5,8 @@ import { BeanProfileSchema, clampProfile, type BeanProfile } from "./schema";
 
 export const DEFAULT_MODEL = "claude-opus-5-5";
 const MAX_CONTINUATIONS = 3;
+/** One budget for the whole lookup, inside the route's 120 s maxDuration. */
+const DEADLINE_MS = 110_000;
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 
 export type BrewErrorCode = "refused" | "bad_model_output" | "upstream";
@@ -111,7 +113,8 @@ const textOf = (content: Anthropic.Beta.BetaContentBlock[]) =>
 
 export async function fetchBeanProfile(
   query: string,
-  client: Anthropic = new Anthropic(),
+  client: Anthropic = new Anthropic({ maxRetries: 1 }),
+  { signal = AbortSignal.timeout(DEADLINE_MS) }: { signal?: AbortSignal } = {},
 ): Promise<{ profile: BeanProfile; model: string }> {
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
   const system = buildSystemPrompt();
@@ -131,7 +134,7 @@ export async function fetchBeanProfile(
         tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 4 }],
         betas: [FALLBACK_BETA],
         fallbacks: "default",
-      });
+      }, { signal });
       if (response.stop_reason !== "pause_turn") break;
       messages.push({ role: "assistant", content: response.content });
     }
@@ -144,15 +147,22 @@ export async function fetchBeanProfile(
       if (parsed.success) return { profile: clampProfile(parsed.data), model: response.model };
     } catch {}
 
-    return { profile: await reformat(client, model, query, text), model: response.model };
+    return { profile: await reformat(client, model, query, text, signal), model: response.model };
   } catch (err) {
     if (err instanceof BrewError) throw err;
+    if (signal.aborted) throw new BrewError("upstream", "The research took too long. Try again, or add the roaster's name.");
     throw new BrewError("upstream", err instanceof Error ? err.message : String(err));
   }
 }
 
 /** Second chance: structured outputs guarantee schema-shaped JSON from the research notes. */
-async function reformat(client: Anthropic, model: string, query: string, research: string): Promise<BeanProfile> {
+async function reformat(
+  client: Anthropic,
+  model: string,
+  query: string,
+  research: string,
+  signal: AbortSignal,
+): Promise<BeanProfile> {
   const response = await client.beta.messages.parse({
     model,
     max_tokens: 16000,
@@ -166,7 +176,7 @@ async function reformat(client: Anthropic, model: string, query: string, researc
     output_config: { effort: "low", format: betaZodOutputFormat(BeanProfileSchema) },
     betas: [FALLBACK_BETA],
     fallbacks: "default",
-  });
+  }, { signal });
   if (response.stop_reason === "refusal") throw new BrewError("refused", "The model declined this request");
   const parsed = BeanProfileSchema.safeParse(response.parsed_output);
   if (!parsed.success) throw new BrewError("bad_model_output", "The model returned an unexpected format");

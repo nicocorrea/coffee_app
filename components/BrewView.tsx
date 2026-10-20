@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { BrewResult } from "@/lib/schema";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
+import { safeSources } from "@/lib/sources";
 import { DrinkPicker } from "./DrinkPicker";
 import { FlavourRadar } from "./FlavourRadar";
 import { RoastRamp } from "./RoastSwatch";
@@ -25,14 +26,6 @@ const GRIND_LABEL = (g: BrewResult["recipe"]["grind"]) =>
     ? "Your usual setting"
     : `${g.steps} step${g.steps === 1 ? "" : "s"} ${g.direction}`;
 
-const hostname = (url: string) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-};
-
 export function BrewView({ result }: { result: BrewResult }) {
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
   const { bean, recipe, flavour, tips } = result;
@@ -43,7 +36,7 @@ export function BrewView({ result }: { result: BrewResult }) {
     ["Variety", bean.variety],
     ["Altitude", bean.altitude],
   ].filter((f): f is [string, string] => Boolean(f[1]));
-  const sources = result.sources.map((url) => ({ url, host: hostname(url) })).filter((s) => s.host);
+  const sources = safeSources(result.sources);
 
   return (
     <article>
