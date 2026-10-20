@@ -38,7 +38,7 @@ Settings must stay inside what the machine actually controls:
 
 | Topic | Decision |
 |---|---|
-| Bean knowledge | Claude (default `claude-sonnet-5-5`, env `ANTHROPIC_MODEL` overrides) with the server-side web search tool, returning JSON validated by a zod schema. |
+| Bean knowledge | Claude (default `claude-opus-5-5`, effort `medium`, env `ANTHROPIC_MODEL` overrides) with the server-side `web_search_20260209` tool and server-side refusal fallbacks (`fallbacks: "default"`). The research turn ends with a JSON object, which is parsed and zod-validated. If that fails, a second call with structured outputs (`output_config.format`) and no tools reformats the research into the schema. |
 | Hosting | Next.js (App Router, TypeScript) deployed to Vercel. API key is a server secret. |
 | Access control | Optional `APP_ACCESS_CODE` env var. When set, `/api/brew` requires header `x-access-code`; the UI asks for the code once and keeps it in localStorage. |
 | Drink recipes | Derived deterministically in code by `deriveDrinks(base)` from the bean's base recipe; Claude adds only bean-specific notes. The Guide page uses the same table. |
@@ -99,7 +99,7 @@ the double.
 
 | Drink | Dose | Yield | Time | Extra |
 |---|---|---|---|---|
-| Ristretto | D | D × max(1, R − 1) (≈1:1–1:1.5) | ~t − 8 s | same grind or 1–2 finer |
+| Ristretto | D | D × clamp(R − 1, 1, 1.5) | ~t − 8 s | same grind or 1–2 finer |
 | Espresso (single) | D | D × R, split into two cups | t | half to each cup |
 | Doppio | D | D × R | t | — |
 | Lungo | D | D × min(R + 1, 3.5) (≈1:3) | t + 10 s | 1–2 steps coarser, temp −1 °C |
@@ -112,7 +112,7 @@ the double.
 | Cappuccino | D | D × R | t | 150 ml milk, 62 °C, thick foam |
 | Latte | D | D × R | t | 220 ml milk, 60 °C, silky |
 
-Every number is rounded to 0.5 g / 1 s / 1 °C. The milk temperature drops 2 °C for light roasts
+Milk drinks steam at least 180 ml in the Meraki jug (the auto-steam probe needs that volume) and pour only what the recipe needs. Every number is rounded to 0.5 g / 1 s / 1 °C. The milk temperature drops 2 °C for light roasts
 (to keep sweetness) and rises 1 °C for dark roasts.
 
 ## Error handling
@@ -122,7 +122,9 @@ Every number is rounded to 0.5 g / 1 s / 1 °C. The milk temperature drops 2 °C
 - Query invalid → 400 with a message.
 - Claude says the input isn't a coffee or can't be identified → 200 with `identified: false` + reason;
   the UI shows the refine state.
-- JSON parse or validation failure → one retry asking for valid JSON, then 502 `bad_model_output`.
+- JSON parse or validation failure → one structured-output reformat call, then 502 `bad_model_output`.
+- `pause_turn` from the server tool → append the assistant turn and resume (max 3 continuations).
+- `stop_reason: refusal` after fallbacks → 502 `refused`.
 - Upstream timeout/error → 502; the UI shows a retry button. Route `maxDuration = 60`.
 
 ## Testing
