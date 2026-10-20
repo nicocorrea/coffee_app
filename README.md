@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Crema — Meraki Gen 2 bean advisor
 
-## Getting Started
+A mobile-first web app. Search any coffee (a roaster and bag, or an origin and process) and get:
 
-First, run the development server:
+- what the coffee is: origin, region, process, variety, altitude and roast level
+- how it tastes: tasting notes, a flavour radar and a description of its character
+- a starting recipe for the **Meraki Gen 2**: dose, yield, ratio, brew temperature, pre-infusion
+  (pressure and seconds), target shot time and grind direction
+- recipes for 12 drinks (ristretto, espresso, doppio, lungo, americano, long black, macchiato,
+  cortado, piccolo, flat white, cappuccino, latte), including milk volume and the auto-steam temperature
+- dial-in fixes for this specific coffee, rest days, water, basket and milk tips
+
+Saved coffees live on the device and open offline. The Guide tab gives the classic ratios for every drink.
+
+## How it works
+
+`POST /api/brew` asks Claude (`claude-opus-5-5` by default) to research the coffee with web search. The
+answer is validated against a zod schema (`lib/schema.ts`) and clamped to what the Meraki Gen 2 can
+actually do (85–96 °C, 14–22 g, 1:1–1:3.5, pre-infusion 1–4 bar for 0–15 s). The drink recipes are then
+derived in code from the base recipe (`lib/drinks.ts`), so ratios stay consistent.
+
+Grind advice is relative ("2 steps finer than your usual medium-roast setting"). Meraki doesn't publish
+the numbering of its 45 grinder steps, so the app never makes up an absolute number.
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # add ANTHROPIC_API_KEY, or set DEMO_MODE=1
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To open it on your phone over Wi-Fi, run `npm run dev -- -H 0.0.0.0` and visit `http://<your-mac-ip>:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push this repository to GitHub and import it at vercel.com/new (framework: Next.js).
+2. Under Settings → Environment Variables, add `ANTHROPIC_API_KEY` and `APP_ACCESS_CODE`.
+   Optionally add `ANTHROPIC_MODEL`.
+3. Deploy, open the URL on your phone and choose **Add to Home Screen**. Enter the access code once.
 
-## Learn More
+Lookups take about 20–40 s, and the route allows up to 120 s (`maxDuration`).
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm test          # unit tests: drink derivation, schema clamping, Claude client, API handler
+npm run e2e       # Playwright at iPhone size against a production build in demo mode
+```
