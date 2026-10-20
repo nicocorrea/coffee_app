@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { BrewError, extractJson, fetchBeanProfile } from "@/lib/claude";
+import { BrewError, extractJson, fetchBeanProfile as fetchWith, resolveProvider, type Provider } from "@/lib/claude";
 import { DEMO_PROFILE } from "@/lib/fixtures";
 
 const json = JSON.stringify(DEMO_PROFILE);
@@ -13,6 +13,10 @@ const msg = (text: string, stop_reason = "end_turn") => ({
     { type: "text", text },
   ],
 });
+
+const ANTHROPIC: Provider = { name: "anthropic", model: "claude-opus-5-5", baseURL: undefined, apiKey: "sk-test" };
+const OPENROUTER: Provider = { name: "openrouter", model: "anthropic/claude-opus-5.5", baseURL: "https://openrouter.ai/api", apiKey: "sk-or-test" };
+const fetchBeanProfile = (q: string, client: Anthropic, opts?: { signal?: AbortSignal }) => fetchWith(q, ANTHROPIC, client, opts);
 
 function fakeClient(responses: unknown[], parsed?: unknown) {
   const create = vi.fn();
@@ -34,6 +38,43 @@ describe("extractJson", () => {
   });
   it("throws when there is no object", () => {
     expect(() => extractJson("no json here")).toThrow("no_json");
+  });
+});
+
+describe("resolveProvider", () => {
+  it("prefers OpenRouter when its key is set", () => {
+    expect(resolveProvider({ OPENROUTER_API_KEY: "sk-or-x", ANTHROPIC_API_KEY: "sk-ant" })).toEqual(OPENROUTER_WITH("sk-or-x"));
+  });
+  it("lets OPENROUTER_MODEL override the default", () => {
+    expect(resolveProvider({ OPENROUTER_API_KEY: "k", OPENROUTER_MODEL: "anthropic/claude-sonnet-5.5" })?.model).toBe(
+      "anthropic/claude-sonnet-5.5",
+    );
+  });
+  it("uses Anthropic directly otherwise", () => {
+    expect(resolveProvider({ ANTHROPIC_API_KEY: "sk-ant" })).toEqual({
+      name: "anthropic",
+      model: "claude-opus-5-5",
+      baseURL: undefined,
+      apiKey: "sk-ant",
+    });
+  });
+  it("returns null with no key", () => {
+    expect(resolveProvider({})).toBeNull();
+  });
+});
+
+const OPENROUTER_WITH = (apiKey: string): Provider => ({ ...OPENROUTER, apiKey });
+
+describe("fetchBeanProfile via OpenRouter", () => {
+  it("uses OpenRouter's web search tool and an explicit fallback model", async () => {
+    const { client, create } = fakeClient([msg(json)]);
+    const { profile } = await fetchWith("Guji", OPENROUTER, client);
+    expect(profile.identified).toBe(true);
+    const params = create.mock.calls[0][0];
+    expect(params.model).toBe("anthropic/claude-opus-5.5");
+    expect(params.tools[0].type).toBe("openrouter:web_search");
+    expect(params.fallbacks).toEqual([{ model: "anthropic/claude-opus-5" }]);
+    expect(params.betas).toBeUndefined();
   });
 });
 

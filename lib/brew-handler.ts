@@ -26,8 +26,8 @@ export async function handleBrew(body: unknown, headers: Headers, env: Env, deps
   }
 
   const demo = env.DEMO_MODE === "1";
-  if (!demo && !env.ANTHROPIC_API_KEY) {
-    return error(500, "not_configured", "Set ANTHROPIC_API_KEY (or DEMO_MODE=1) on the server.");
+  if (!demo && !env.OPENROUTER_API_KEY && !env.ANTHROPIC_API_KEY) {
+    return error(500, "not_configured", "Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY (or DEMO_MODE=1) on the server.");
   }
 
   try {

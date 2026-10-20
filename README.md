@@ -14,7 +14,10 @@ Saved coffees live on the device and open offline. The Guide tab gives the class
 
 ## How it works
 
-`POST /api/brew` asks Claude (`claude-opus-5-5` by default) to research the coffee with web search. The
+`POST /api/brew` asks Claude Opus 5.5 to research the coffee with web search. It goes through
+OpenRouter when `OPENROUTER_API_KEY` is set (model `anthropic/claude-opus-5.5`, OpenRouter's
+`openrouter:web_search` tool), or directly to Anthropic with `ANTHROPIC_API_KEY`. A lookup takes about
+15–35 s and costs roughly $0.05–0.10. The
 answer is validated against a zod schema (`lib/schema.ts`) and clamped to what the Meraki Gen 2 can
 actually do (85–96 °C, 14–22 g, 1:1–1:3.5, pre-infusion 1–4 bar for 0–15 s). The drink recipes are then
 derived in code from the base recipe (`lib/drinks.ts`), so ratios stay consistent.
@@ -26,7 +29,7 @@ the numbering of its 45 grinder steps, so the app never makes up an absolute num
 
 ```bash
 npm install
-cp .env.example .env.local   # add ANTHROPIC_API_KEY, or set DEMO_MODE=1
+cp .env.example .env.local   # add OPENROUTER_API_KEY (or ANTHROPIC_API_KEY), or set DEMO_MODE=1
 npm run dev                  # http://localhost:3000
 ```
 
@@ -35,8 +38,8 @@ To open it on your phone over Wi-Fi, run `npm run dev -- -H 0.0.0.0` and visit `
 ## Deploy to Vercel
 
 1. Push this repository to GitHub and import it at vercel.com/new (framework: Next.js).
-2. Under Settings → Environment Variables, add `ANTHROPIC_API_KEY` and `APP_ACCESS_CODE`.
-   Optionally add `ANTHROPIC_MODEL`.
+2. Under Settings → Environment Variables, add `OPENROUTER_API_KEY` and `APP_ACCESS_CODE`.
+   Optionally add `OPENROUTER_MODEL`.
 3. Deploy, open the URL on your phone and choose **Add to Home Screen**. Enter the access code once.
 
 Lookups take about 20–40 s, and the route allows up to 120 s (`maxDuration`).

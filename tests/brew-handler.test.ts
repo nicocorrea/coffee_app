@@ -45,6 +45,11 @@ describe("handleBrew", () => {
     expect((res.body as { model: string }).model).toBe("demo");
   });
 
+  it("treats an OpenRouter key as configured", async () => {
+    const res = await call({ query: "Guji" }, { env: { OPENROUTER_API_KEY: "sk-or-x" } });
+    expect(res.status).toBe(200);
+  });
+
   it("reports not_configured without a key", async () => {
     const res = await call({ query: "Guji" }, { env: {} });
     expect(res.status).toBe(500);

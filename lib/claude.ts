@@ -4,6 +4,8 @@ import { z } from "zod";
 import { BeanProfileSchema, clampProfile, type BeanProfile } from "./schema";
 
 export const DEFAULT_MODEL = "claude-opus-5-5";
+export const OPENROUTER_DEFAULT_MODEL = "anthropic/claude-opus-5.5";
+const OPENROUTER_FALLBACK_MODEL = "anthropic/claude-opus-5";
 const MAX_CONTINUATIONS = 3;
 /** One budget for the whole lookup, inside the route's 120 s maxDuration. */
 const DEADLINE_MS = 110_000;
@@ -20,6 +22,42 @@ export class BrewError extends Error {
     this.name = "BrewError";
   }
 }
+
+/** Where requests go. OpenRouter exposes an Anthropic-compatible Messages API, so one SDK serves both. */
+export type Provider = {
+  name: "anthropic" | "openrouter";
+  model: string;
+  baseURL: string | undefined;
+  apiKey: string;
+};
+
+export function resolveProvider(env: Record<string, string | undefined>): Provider | null {
+  if (env.OPENROUTER_API_KEY) {
+    return {
+      name: "openrouter",
+      model: env.OPENROUTER_MODEL || OPENROUTER_DEFAULT_MODEL,
+      baseURL: "https://openrouter.ai/api",
+      apiKey: env.OPENROUTER_API_KEY,
+    };
+  }
+  if (env.ANTHROPIC_API_KEY) {
+    return { name: "anthropic", model: env.ANTHROPIC_MODEL || DEFAULT_MODEL, baseURL: undefined, apiKey: env.ANTHROPIC_API_KEY };
+  }
+  return null;
+}
+
+type Routing = Pick<Anthropic.Beta.MessageCreateParamsNonStreaming, "betas" | "fallbacks">;
+
+// OpenRouter takes an explicit fallback list (no "default" mode, no beta header) and has its own search tool.
+const routingFor = (p: Provider): Routing =>
+  p.name === "openrouter"
+    ? { fallbacks: [{ model: OPENROUTER_FALLBACK_MODEL }] }
+    : { betas: [FALLBACK_BETA], fallbacks: "default" };
+
+const searchToolFor = (p: Provider) =>
+  (p.name === "openrouter"
+    ? { type: "openrouter:web_search", parameters: { max_results: 5 } }
+    : { type: "web_search_20260209", name: "web_search", max_uses: 4 }) as unknown as Anthropic.Beta.BetaToolUnion;
 
 const JSON_SCHEMA = JSON.stringify(z.toJSONSchema(BeanProfileSchema));
 
@@ -57,7 +95,13 @@ The user gives a coffee: a roaster + product name, or a description (origin, pro
 6. Pick the 1–3 drinks (from the allowed ids) where this coffee shines, and optional short notes for
    specific drinks.
 If the input is not a coffee or you cannot identify anything coffee-like, set "identified": false,
-explain why in "reason", and fill the other fields with your best generic medium-roast defaults.
+put one or two sentences in "reason" telling the user how to search instead (the app shows only this
+message), and fill the other fields with generic medium-roast defaults.
+
+## Style
+The fields appear on a phone screen. Keep origin, region, process, variety and altitude short, like
+a label on a coffee bag (under about 40 characters each, no parentheses or caveats). For blends, set
+origin to "Blend" and list the component countries in region. Write the other text plainly and briefly.
 
 ## Output
 Write your final answer as ONE JSON object matching this JSON Schema, with no other text after it:
@@ -113,10 +157,12 @@ const textOf = (content: Anthropic.Beta.BetaContentBlock[]) =>
 
 export async function fetchBeanProfile(
   query: string,
-  client: Anthropic = new Anthropic({ maxRetries: 1 }),
+  provider: Provider,
+  client: Anthropic = new Anthropic({ apiKey: provider.apiKey, baseURL: provider.baseURL, maxRetries: 1 }),
   { signal = AbortSignal.timeout(DEADLINE_MS) }: { signal?: AbortSignal } = {},
 ): Promise<{ profile: BeanProfile; model: string }> {
-  const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
+  const { model } = provider;
+  const routing = routingFor(provider);
   const system = buildSystemPrompt();
   const messages: Anthropic.Beta.BetaMessageParam[] = [
     { role: "user", content: `Coffee to research: ${query}` },
@@ -131,9 +177,8 @@ export async function fetchBeanProfile(
         system,
         messages,
         output_config: { effort: "medium" },
-        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 4 }],
-        betas: [FALLBACK_BETA],
-        fallbacks: "default",
+        tools: [searchToolFor(provider)],
+        ...routing,
       }, { signal });
       if (response.stop_reason !== "pause_turn") break;
       messages.push({ role: "assistant", content: response.content });
@@ -147,7 +192,7 @@ export async function fetchBeanProfile(
       if (parsed.success) return { profile: clampProfile(parsed.data), model: response.model };
     } catch {}
 
-    return { profile: await reformat(client, model, query, text, signal), model: response.model };
+    return { profile: await reformat(client, model, routing, query, text, signal), model: response.model };
   } catch (err) {
     if (err instanceof BrewError) throw err;
     if (signal.aborted) throw new BrewError("upstream", "The research took too long. Try again, or add the roaster's name.");
@@ -159,6 +204,7 @@ export async function fetchBeanProfile(
 async function reformat(
   client: Anthropic,
   model: string,
+  routing: Routing,
   query: string,
   research: string,
   signal: AbortSignal,
@@ -174,8 +220,7 @@ async function reformat(
       },
     ],
     output_config: { effort: "low", format: betaZodOutputFormat(BeanProfileSchema) },
-    betas: [FALLBACK_BETA],
-    fallbacks: "default",
+    ...routing,
   }, { signal });
   if (response.stop_reason === "refusal") throw new BrewError("refused", "The model declined this request");
   const parsed = BeanProfileSchema.safeParse(response.parsed_output);
