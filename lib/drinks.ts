@@ -157,8 +157,9 @@ export function deriveDrinks(
   const tMin = (offset: number) => Math.round(clamp(base.timeMin + offset, LIMITS.timeS));
   const tMax = (offset: number) => Math.round(clamp(base.timeMax + offset, LIMITS.timeS));
 
-  const shots: Record<Shot, Pick<DrinkRecipe, "yieldG" | "timeMin" | "timeMax" | "tempC" | "grind" | "ratio">> = {
+  const shots: Record<Shot, Pick<DrinkRecipe, "doseG" | "yieldG" | "timeMin" | "timeMax" | "tempC" | "grind" | "ratio">> = {
     double: {
+      doseG: dose,
       yieldG: g(dose * ratio),
       ratio: ratioLabel(dose, g(dose * ratio)),
       timeMin: tMin(0),
@@ -167,8 +168,9 @@ export function deriveDrinks(
       grind: "Your dialled-in setting",
     },
     split: {
+      doseG: g(dose / 2),
       yieldG: g((dose * ratio) / 2),
-      ratio: ratioLabel(dose, g(dose * ratio)),
+      ratio: ratioLabel(g(dose / 2), g((dose * ratio) / 2)),
       timeMin: tMin(0),
       timeMax: tMax(0),
       tempC: base.tempC,
@@ -177,6 +179,7 @@ export function deriveDrinks(
     ristretto: (() => {
       const out = g(dose * clamp(ratio - 1, [1, 1.5]));
       return {
+        doseG: dose,
         yieldG: out,
         ratio: ratioLabel(dose, out),
         timeMin: tMin(-8),
@@ -188,6 +191,7 @@ export function deriveDrinks(
     lungo: (() => {
       const out = g(dose * Math.min(ratio + 1, LIMITS.ratio[1]));
       return {
+        doseG: dose,
         yieldG: out,
         ratio: ratioLabel(dose, out),
         timeMin: tMin(10),
@@ -205,7 +209,6 @@ export function deriveDrinks(
       name: d.name,
       kind: d.kind,
       description: d.description,
-      doseG: dose,
       ...shot,
       cup: d.cup,
       method: d.method,

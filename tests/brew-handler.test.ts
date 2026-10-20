@@ -3,9 +3,10 @@ import { handleBrew } from "@/lib/brew-handler";
 import { BrewError } from "@/lib/claude";
 import { DEMO_PROFILE } from "@/lib/fixtures";
 
-const ok = () => vi.fn().mockResolvedValue({ profile: DEMO_PROFILE, model: "claude-opus-5-5" });
+type Fetch = Parameters<typeof handleBrew>[3]["fetchProfile"];
+const ok = () => vi.fn<Fetch>().mockResolvedValue({ profile: DEMO_PROFILE, model: "claude-opus-5-5" });
 const env = { ANTHROPIC_API_KEY: "sk-test" };
-const call = (body: unknown, opts: { env?: Record<string, string | undefined>; code?: string; fetchProfile?: ReturnType<typeof vi.fn> } = {}) =>
+const call = (body: unknown, opts: { env?: Record<string, string | undefined>; code?: string; fetchProfile?: Fetch } = {}) =>
   handleBrew(body, new Headers(opts.code ? { "x-access-code": opts.code } : {}), opts.env ?? env, {
     fetchProfile: opts.fetchProfile ?? ok(),
   });
@@ -51,7 +52,7 @@ describe("handleBrew", () => {
   });
 
   it("passes through unidentified results without drinks", async () => {
-    const fetchProfile = vi.fn().mockResolvedValue({
+    const fetchProfile = vi.fn<Fetch>().mockResolvedValue({
       profile: { ...DEMO_PROFILE, identified: false, reason: "That's a pizza." },
       model: "m",
     });
@@ -61,7 +62,7 @@ describe("handleBrew", () => {
   });
 
   it("maps model errors to 502 with their code", async () => {
-    const fetchProfile = vi.fn().mockRejectedValue(new BrewError("refused", "no"));
+    const fetchProfile = vi.fn<Fetch>().mockRejectedValue(new BrewError("refused", "no"));
     const res = await call({ query: "Guji" }, { fetchProfile });
     expect(res.status).toBe(502);
     expect(res.body).toMatchObject({ code: "refused" });

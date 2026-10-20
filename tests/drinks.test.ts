@@ -49,10 +49,11 @@ describe("deriveDrinks", () => {
     expect(cool.tempC).toBe(85);
   });
 
-  it("espresso splits the double into two cups", () => {
+  it("espresso shows one cup of the split double", () => {
     const d = byId(deriveDrinks(base, "medium"), "espresso");
     expect(d.yieldG).toBe(19);
-    expect(d.doseG).toBe(18);
+    expect(d.doseG).toBe(9);
+    expect(d.ratio).toBe("1:2.1");
   });
 
   it("adjusts milk temperature for roast level", () => {
