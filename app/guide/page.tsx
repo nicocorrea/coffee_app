@@ -1,4 +1,5 @@
 import { DrinkCard } from "@/components/DrinkCard";
+import { FlavourReference } from "@/components/FlavourExplainer";
 import { CLASSIC_BASE, deriveDrinks } from "@/lib/drinks";
 
 export const metadata = { title: "Guide" };
@@ -64,6 +65,18 @@ export default function GuidePage() {
               </div>
             </details>
           ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="flavour" className="mt-14">
+        <h2 id="flavour" className="text-2xl font-semibold tracking-tight">
+          Reading the flavour chart
+        </h2>
+        <p className="mt-2 leading-relaxed text-muted">
+          Every coffee is scored from 1 to 5 on five qualities. Here’s what each one means, with foods to compare.
+        </p>
+        <div className="mt-5">
+          <FlavourReference />
         </div>
       </section>
 

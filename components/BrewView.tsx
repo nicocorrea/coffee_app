@@ -5,6 +5,7 @@ import type { BrewResult } from "@/lib/schema";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
 import { safeSources } from "@/lib/sources";
 import { DrinkPicker } from "./DrinkPicker";
+import { FlavourRows } from "./FlavourExplainer";
 import { FlavourRadar } from "./FlavourRadar";
 import { RoastRamp } from "./RoastSwatch";
 import { SearchBox } from "./SearchBox";
@@ -122,6 +123,9 @@ export function BrewView({ result }: { result: BrewResult }) {
         <p className="mt-5 text-[1.05rem] leading-relaxed">{flavour.character}</p>
         <div className="mt-6">
           <FlavourRadar flavour={flavour} />
+        </div>
+        <div className="mt-6">
+          <FlavourRows flavour={flavour} />
         </div>
       </Section>
 

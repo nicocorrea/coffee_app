@@ -70,3 +70,20 @@ test("guide lists every drink and the page never scrolls sideways", async ({ pag
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("flavour qualities explain themselves on the recipe and in the guide", async ({ page }) => {
+  await page.goto("/bean?q=Guji");
+  const acidity = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Acidity/ }) });
+  await expect(acidity).toContainText("High, 4/5");
+  await expect(acidity).toContainText("like an orange");
+  await acidity.locator("summary").click();
+  await expect(acidity).toContainText("(this coffee)");
+  await expect(acidity).toContainText("Grind finer");
+
+  await page.goto("/guide");
+  await expect(page.getByRole("heading", { name: "Reading the flavour chart" })).toBeVisible();
+  await page.locator("summary", { hasText: /^Finish$/ }).click();
+  await expect(page.getByText("like good dark chocolate or red wine")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Taste it in five questions" })).toBeVisible();
+  await expect(page.locator("ol > li")).toHaveCount(5);
+});
