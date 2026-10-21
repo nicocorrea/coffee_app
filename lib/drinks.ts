@@ -233,7 +233,7 @@ export const CLASSIC_BASE: BaseRecipe = {
   doseG: 18,
   yieldG: 36,
   tempC: 93,
-  preinfusion: { pressureBar: 2, seconds: 5 },
+  preinfusion: { pressureBar: 3, seconds: 5 },
   timeMin: 25,
   timeMax: 30,
   grind: { direction: "same", steps: 0, advice: "Your usual espresso setting." },

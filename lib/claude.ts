@@ -69,7 +69,9 @@ the best possible coffee on a Meraki Gen 2 espresso machine.
 - Dual boiler, PID brew temperature adjustable 85–96 °C.
 - Built-in 38 mm Timemore conical grinder with 45 discrete steps. It grinds to a dose weight and stops
   the shot on yield weight (0.1 g).
-- Low-pressure pre-infusion, adjustable by pressure (about 1–4 bar) and time (0–15 s).
+- Low-pressure pre-infusion at 3 or 4 bar (whole bar only) for 5–15 s (whole seconds). It cannot go
+  below 3 bar or 5 s, so never suggest other values. Pre-infusion can also be switched off (seconds 0):
+  choose that only when the research or this coffee's character clearly favours it, and say why in tips.extras.
 - Fixed ~9 bar extraction. There is NO flow or pressure profiling — never suggest it.
 - 58 mm E61-compatible portafilter with an 18 g double basket by default.
 - Automatic milk steaming to a target temperature via a probe; it needs about 180 ml or more in the jug.

@@ -6,7 +6,7 @@ const base: BaseRecipe = {
   doseG: 18,
   yieldG: 38,
   tempC: 93,
-  preinfusion: { pressureBar: 2, seconds: 6 },
+  preinfusion: { pressureBar: 3, seconds: 6 },
   timeMin: 27,
   timeMax: 31,
   grind: { direction: "same", steps: 0, advice: "Start at your usual setting." },

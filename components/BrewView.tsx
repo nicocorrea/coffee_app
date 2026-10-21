@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { BrewResult } from "@/lib/schema";
+import { clampPreinfusion, type BrewResult } from "@/lib/schema";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
 import { safeSources } from "@/lib/sources";
 import { BeanName } from "./BeanName";
@@ -36,7 +36,9 @@ const lookedUp = (iso: string) =>
 export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?: () => void }) {
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
   const [stamps, setStamps] = useState(0); // bumps on each save so the bookmark stamps once
-  const { bean, recipe, flavour, tips } = result;
+  const { bean, flavour, tips } = result;
+  // Lookups saved before the Meraki's pre-infusion limits were corrected can hold settings it doesn't offer.
+  const recipe = { ...result.recipe, preinfusion: clampPreinfusion(result.recipe.preinfusion) };
   const facts = [
     ["Origin", bean.origin],
     ["Region", bean.region],
