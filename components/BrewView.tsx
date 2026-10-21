@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { clampPreinfusion, type BrewResult } from "@/lib/schema";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
 import { safeSources } from "@/lib/sources";
+import { BeanName } from "./BeanName";
 import { DrinkPicker } from "./DrinkPicker";
 import { FlavourRows } from "./FlavourExplainer";
 import { FlavourRadar } from "./FlavourRadar";
@@ -33,6 +35,7 @@ const lookedUp = (iso: string) =>
 /** `onRefresh` offers to research the coffee again instead of using what's stored on the device. */
 export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?: () => void }) {
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
+  const [stamps, setStamps] = useState(0); // bumps on each save so the bookmark stamps once
   const { bean, flavour, tips } = result;
   // Lookups saved before the Meraki's pre-infusion limits were corrected can hold settings it doesn't offer.
   const recipe = { ...result.recipe, preinfusion: clampPreinfusion(result.recipe.preinfusion) };
@@ -56,13 +59,23 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
         </Link>
         <button
           type="button"
-          onClick={() => toggleFavourite(result)}
+          onClick={() => {
+            if (toggleFavourite(result)) setStamps((n) => n + 1);
+          }}
           aria-pressed={saved}
           className={`flex min-h-11 items-center gap-2 rounded-xl px-4 font-medium transition-colors ${
             saved ? "bg-cascara text-paper" : "bg-surface-2 text-ink"
           }`}
         >
-          <svg viewBox="0 0 24 24" className="size-5" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} aria-hidden>
+          <svg
+            key={stamps}
+            viewBox="0 0 24 24"
+            className={`size-5 ${saved && stamps > 0 ? "animate-stamp" : ""}`}
+            fill={saved ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth={1.8}
+            aria-hidden
+          >
             <path d="M7 4h10v16l-5-3.5L7 20V4Z" strokeLinejoin="round" />
           </svg>
           {saved ? "Saved" : "Save"}
@@ -74,7 +87,7 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
           <RoastRamp roast={bean.roastLevel} />
         </div>
         <h1 className="condensed mt-7 text-[2.75rem] leading-[0.98] font-bold tracking-tight text-balance lg:text-[4.75rem] lg:leading-[0.92]">
-          {bean.name}
+          <BeanName result={result} className="inline-block" />
         </h1>
         <p className="mt-2 text-lg lg:mt-4 lg:text-xl">
           {bean.roaster && <span className="text-cascara">{bean.roaster}, </span>}

@@ -85,6 +85,18 @@ test("a coffee that's better without pre-infusion shows it switched off", async 
   await expect(page.getByText(/Pre-infuse at/)).toHaveCount(0);
 });
 
+test("with reduced motion the recipe appears complete, without animating in", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/bean?q=Guji");
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  const settled = () =>
+    page.evaluate(() => document.getAnimations().every((a) => a.playState === "finished" || a.effect?.getTiming().iterations === Infinity));
+  await expect.poll(settled).toBe(true);
+  await page.getByRole("tab", { name: /Latte/ }).click();
+  await expect.poll(settled).toBe(true);
+  expect(await page.locator("#drink-panel > div").evaluate((e) => getComputedStyle(e).opacity)).toBe("1");
+});
+
 test("failed research offers a retry", async ({ page }) => {
   await page.route("**/api/brew", (route) =>
     route.fulfill({ status: 502, json: { code: "upstream", message: "The research timed out." } }),

@@ -36,7 +36,16 @@ export function FlavourRadar({ flavour }: { flavour: BeanProfile["flavour"] }) {
         const [x, y] = point(i, R);
         return <line key={i} x1={W / 2} y1={C} x2={x} y2={y} stroke="var(--color-line)" strokeWidth={1} />;
       })}
-      <polygon points={shape} fill="var(--color-cascara)" fillOpacity={0.35} stroke="var(--color-cascara)" strokeWidth={2} strokeLinejoin="round" />
+      <polygon
+        points={shape}
+        fill="var(--color-cascara)"
+        fillOpacity={0.35}
+        stroke="var(--color-cascara)"
+        strokeWidth={2}
+        strokeLinejoin="round"
+        className="bloom"
+        style={{ transformOrigin: `${W / 2}px ${C}px` }}
+      />
       {AXES.map(([key, label], i) => {
         const [x, y] = point(i, R + 14);
         const anchor = Math.abs(x - W / 2) < 4 ? "middle" : x > W / 2 ? "start" : "end";

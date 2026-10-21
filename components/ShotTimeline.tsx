@@ -1,6 +1,6 @@
 import type { BaseRecipe } from "@/lib/schema";
 
-/** The shot drawn to scale: pre-infusion, ramp-up, then the target window. */
+/** The shot drawn to scale: pre-infusion, ramp-up, then the target window. It fills in like a shot being pulled. */
 export function ShotTimeline({ recipe }: { recipe: BaseRecipe }) {
   const { seconds: pre, pressureBar } = recipe.preinfusion;
   const end = Math.max(40, recipe.timeMax + 5);
@@ -13,18 +13,20 @@ export function ShotTimeline({ recipe }: { recipe: BaseRecipe }) {
         role="img"
         aria-label={`Pre-infusion for ${pre} seconds, then stop between ${recipe.timeMin} and ${recipe.timeMax} seconds`}
       >
-        {pre > 0 && <span className="absolute inset-y-0 left-0 rounded-l-xl bg-sage/80" style={{ width: pct(pre) }} />}
-        <span
-          className="absolute inset-y-0 bg-roast-light/45"
-          style={{ left: pct(pre), width: `calc(${pct(recipe.timeMin)} - ${pct(pre)})` }}
-        />
-        <span
-          className="absolute inset-y-0 rounded-r-md bg-cascara"
-          style={{ left: pct(recipe.timeMin), width: `calc(${pct(recipe.timeMax)} - ${pct(recipe.timeMin)})` }}
-        />
-        <span className="absolute inset-y-0 w-px bg-ink/60" style={{ left: pct(recipe.timeMax) }} />
+        <span className="absolute inset-0 animate-pull">
+          {pre > 0 && <span className="absolute inset-y-0 left-0 rounded-l-xl bg-sage/80" style={{ width: pct(pre) }} />}
+          <span
+            className="absolute inset-y-0 bg-roast-light/45"
+            style={{ left: pct(pre), width: `calc(${pct(recipe.timeMin)} - ${pct(pre)})` }}
+          />
+          <span
+            className="absolute inset-y-0 rounded-r-md bg-cascara"
+            style={{ left: pct(recipe.timeMin), width: `calc(${pct(recipe.timeMax)} - ${pct(recipe.timeMin)})` }}
+          />
+          <span className="absolute inset-y-0 w-px bg-ink/60" style={{ left: pct(recipe.timeMax) }} />
+        </span>
       </div>
-      <div className="numerals relative mt-2 h-5 text-sm text-muted">
+      <div className="numerals relative mt-2 h-5 animate-rise text-sm text-muted [animation-delay:1.1s]">
         <span className="absolute left-0">0 s</span>
         <span className="absolute -translate-x-1/2 text-ink" style={{ left: pct(recipe.timeMin) }}>
           {recipe.timeMin}
