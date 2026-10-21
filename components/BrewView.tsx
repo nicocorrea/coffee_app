@@ -27,7 +27,11 @@ const GRIND_LABEL = (g: BrewResult["recipe"]["grind"]) =>
     ? "Your usual setting"
     : `${g.steps} step${g.steps === 1 ? "" : "s"} ${g.direction}`;
 
-export function BrewView({ result }: { result: BrewResult }) {
+const lookedUp = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
+/** `onRefresh` offers to research the coffee again instead of using what's stored on the device. */
+export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?: () => void }) {
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
   const { bean, recipe, flavour, tips } = result;
   const facts = [
@@ -208,6 +212,20 @@ export function BrewView({ result }: { result: BrewResult }) {
               </li>
             ))}
           </ul>
+        )}
+        {result.createdAt && (
+          <div className="mt-6 flex items-center justify-between gap-4">
+            <p>Looked up {lookedUp(result.createdAt)} and kept on this device.</p>
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="min-h-11 shrink-0 rounded-xl bg-surface-2 px-4 font-medium text-ink transition-colors hover:bg-line"
+              >
+                Research again
+              </button>
+            )}
+          </div>
         )}
         <div className="mt-10">
           <p className="mb-3 text-base text-ink">Not quite the right coffee?</p>

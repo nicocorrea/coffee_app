@@ -27,6 +27,37 @@ test("search, read the recipe, pick a drink, save and reopen offline", async ({ 
   await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
 });
 
+test("a looked-up coffee stays on the device and reopens without researching it again", async ({ context, page }) => {
+  let calls = 0;
+  await context.route("**/api/brew", (route) => {
+    calls++;
+    return route.continue();
+  });
+  const recipe = (p: typeof page) => p.getByRole("heading", { level: 1, name: "Guji Hambela Natural" });
+
+  await page.goto("/bean?q=Guji%20natural");
+  await expect(recipe(page)).toBeVisible();
+  await page.close();
+
+  // A new tab starts with empty session storage, like reopening the app.
+  const later = await context.newPage();
+  await later.goto("/");
+  const recent = later.getByRole("region", { name: "Recent lookups" });
+  await recent.getByRole("link", { name: /Guji Hambela Natural/ }).click();
+  await expect(recipe(later)).toBeVisible();
+  await expect(later.getByText(/Looked up .* and kept on this device/)).toBeVisible();
+
+  await later.goto("/");
+  await later.getByRole("searchbox").fill("  guji NATURAL ");
+  await later.getByRole("button", { name: "Dial in" }).click();
+  await expect(recipe(later)).toBeVisible();
+  expect(calls).toBe(1);
+
+  await later.getByRole("button", { name: "Research again" }).click();
+  await expect.poll(() => calls).toBe(2);
+  await expect(recipe(later)).toBeVisible();
+});
+
 test("failed research offers a retry", async ({ page }) => {
   await page.route("**/api/brew", (route) =>
     route.fulfill({ status: 502, json: { code: "upstream", message: "The research timed out." } }),

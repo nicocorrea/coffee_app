@@ -1,3 +1,4 @@
+import { RecentList } from "@/components/RecentList";
 import { SavedList } from "@/components/SavedList";
 import { SearchBox } from "@/components/SearchBox";
 
@@ -15,6 +16,7 @@ export default function Home() {
         <SearchBox />
       </div>
       <SavedList variant="strip" />
+      <RecentList />
     </main>
   );
 }

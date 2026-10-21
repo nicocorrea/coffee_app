@@ -1,9 +1,10 @@
 "use client";
 
+import { getFavourites, refreshFavourite } from "./favourites";
+import { findLookup, normalizeQuery, rememberLookup } from "./history";
 import type { BrewResult } from "./schema";
 
 const ACCESS_KEY = "crema:access";
-const resultKey = (q: string) => `crema:result:${q.trim().toLowerCase()}`;
 
 export type BrewOutcome =
   | { ok: true; result: BrewResult }
@@ -23,14 +24,10 @@ export function setAccessCode(code: string) {
   } catch {}
 }
 
-/** Results from this session, so going back and forth doesn't re-run the research. */
+/** A coffee already researched on this device for this search, so it doesn't cost another lookup. */
 export function getCachedResult(query: string): BrewResult | null {
-  try {
-    const raw = sessionStorage.getItem(resultKey(query));
-    return raw ? (JSON.parse(raw) as BrewResult) : null;
-  } catch {
-    return null;
-  }
+  const q = normalizeQuery(query);
+  return findLookup(q) ?? getFavourites().find((r) => normalizeQuery(r.query) === q) ?? null;
 }
 
 export async function requestBrew(query: string, signal?: AbortSignal): Promise<BrewOutcome> {
@@ -56,8 +53,10 @@ export async function requestBrew(query: string, signal?: AbortSignal): Promise<
       message: body?.message ?? "Something went wrong. Try again.",
     };
   }
-  try {
-    sessionStorage.setItem(resultKey(query), JSON.stringify(body));
-  } catch {}
-  return { ok: true, result: body as BrewResult };
+  const result = body as BrewResult;
+  if (result.identified) {
+    rememberLookup(query, result);
+    refreshFavourite(result);
+  }
+  return { ok: true, result };
 }

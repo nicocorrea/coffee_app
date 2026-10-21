@@ -2,7 +2,27 @@
 
 import Link from "next/link";
 import { favKey, useFavourites } from "@/lib/favourites";
+import type { BrewResult } from "@/lib/schema";
 import { RoastDot } from "./RoastSwatch";
+
+/** One coffee in a list: name, where it's from, and the numbers you set on the machine. */
+export function CoffeeRow({ result: r, href }: { result: BrewResult; href: string }) {
+  return (
+    <Link href={href} className="flex min-h-20 items-center gap-4 py-4">
+      <RoastDot roast={r.bean.roastLevel} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-lg font-medium">{r.bean.name}</span>
+        <span className="block truncate text-sm text-muted">
+          {[r.bean.roaster, r.bean.origin, r.bean.process].filter(Boolean).join(", ")}
+        </span>
+      </span>
+      <span className="numerals shrink-0 text-right text-sm text-muted">
+        <span className="block text-base text-ink">{r.recipe.tempC} °C</span>
+        {r.recipe.doseG}→{r.recipe.yieldG} g
+      </span>
+    </Link>
+  );
+}
 
 /** Saved coffees as a horizontal strip (home) or a full list (Saved tab). */
 export function SavedList({ variant }: { variant: "strip" | "list" }) {
@@ -50,19 +70,7 @@ export function SavedList({ variant }: { variant: "strip" | "list" }) {
     <ul className="divide-y divide-line">
       {favourites.map((r) => (
         <li key={favKey(r)}>
-          <Link href={`/bean?saved=${encodeURIComponent(favKey(r))}`} className="flex min-h-20 items-center gap-4 py-4">
-            <RoastDot roast={r.bean.roastLevel} />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-lg font-medium">{r.bean.name}</span>
-              <span className="block truncate text-sm text-muted">
-                {[r.bean.roaster, r.bean.origin, r.bean.process].filter(Boolean).join(", ")}
-              </span>
-            </span>
-            <span className="numerals shrink-0 text-right text-sm text-muted">
-              <span className="block text-base text-ink">{r.recipe.tempC} °C</span>
-              {r.recipe.doseG}→{r.recipe.yieldG} g
-            </span>
-          </Link>
+          <CoffeeRow result={r} href={`/bean?saved=${encodeURIComponent(favKey(r))}`} />
         </li>
       ))}
     </ul>

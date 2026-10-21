@@ -10,7 +10,9 @@ A mobile-first web app. Search any coffee (a roaster and bag, or an origin and p
   cortado, piccolo, flat white, cappuccino, latte), including milk volume and the auto-steam temperature
 - dial-in fixes for this specific coffee, rest days, water, basket and milk tips
 
-Saved coffees live on the device and open offline. The Guide tab gives the classic ratios for every drink.
+Every lookup is kept on the device (the 20 most recent coffees, in `localStorage`), so reopening one from
+**Recent lookups** or searching for it again costs nothing and works offline. **Research again** on a recipe
+runs a fresh lookup. Saved coffees live on the device too. The Guide tab gives the classic ratios for every drink.
 
 ## How it works
 

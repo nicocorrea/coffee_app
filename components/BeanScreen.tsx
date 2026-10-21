@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAccessCode, getCachedResult, requestBrew, type BrewOutcome } from "@/lib/api";
 import { favKey, useFavourites } from "@/lib/favourites";
+import { rememberLookup } from "@/lib/history";
 import type { BrewResult } from "@/lib/schema";
 import { AccessGate, ErrorState, LoadingStages, NotIdentified } from "./BrewStates";
 import { BrewView } from "./BrewView";
@@ -23,12 +24,25 @@ export function BeanScreen() {
   const query = params.get("q")?.trim() ?? "";
   const saved = params.get("saved");
   const [attempt, setAttempt] = useState(0);
+  // The query the user asked to research again, skipping what's stored on the device.
+  const [freshFor, setFreshFor] = useState<string | null>(null);
 
   if (saved) return <SavedBean id={saved} />;
   if (!query) {
     return <ErrorState title="Search for a coffee" message="Type a roaster and coffee name, or an origin and process." />;
   }
-  return <Lookup key={`${query}#${attempt}`} query={query} onRetry={() => setAttempt((a) => a + 1)} />;
+  return (
+    <Lookup
+      key={`${query}#${attempt}`}
+      query={query}
+      fresh={freshFor === query}
+      onRetry={() => setAttempt((a) => a + 1)}
+      onRefresh={() => {
+        setFreshFor(query);
+        setAttempt((a) => a + 1);
+      }}
+    />
+  );
 }
 
 function SavedBean({ id }: { id: string }) {
@@ -39,13 +53,18 @@ function SavedBean({ id }: { id: string }) {
   return <BrewView result={result} />;
 }
 
-function Lookup({ query, onRetry }: { query: string; onRetry: () => void }) {
-  const [cached] = useState(() => getCachedResult(query));
+type LookupProps = { query: string; fresh: boolean; onRetry: () => void; onRefresh: () => void };
+
+function Lookup({ query, fresh, onRetry, onRefresh }: LookupProps) {
+  const [cached] = useState(() => (fresh ? null : getCachedResult(query)));
   const [state, setState] = useState<State>(cached ? { kind: "done", result: cached } : { kind: "loading" });
   const [hadCode] = useState(() => getAccessCode() !== "");
 
   useEffect(() => {
-    if (cached) return;
+    if (cached) {
+      rememberLookup(query, cached); // move it to the top of Recent
+      return;
+    }
     const controller = new AbortController();
     requestBrew(query, controller.signal)
       .then((o) => setState(o.ok ? { kind: "done", result: o.result } : { kind: "error", ...o }))
@@ -65,5 +84,5 @@ function Lookup({ query, onRetry }: { query: string; onRetry: () => void }) {
     );
   }
   if (!state.result.identified) return <NotIdentified query={query} reason={state.result.reason} />;
-  return <BrewView result={state.result} />;
+  return <BrewView result={state.result} onRefresh={onRefresh} />;
 }
