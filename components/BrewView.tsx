@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { BrewResult } from "@/lib/schema";
+import { clampPreinfusion, type BrewResult } from "@/lib/schema";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
 import { safeSources } from "@/lib/sources";
 import { DrinkPicker } from "./DrinkPicker";
@@ -33,7 +33,9 @@ const lookedUp = (iso: string) =>
 /** `onRefresh` offers to research the coffee again instead of using what's stored on the device. */
 export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?: () => void }) {
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
-  const { bean, recipe, flavour, tips } = result;
+  const { bean, flavour, tips } = result;
+  // Lookups saved before the Meraki's pre-infusion limits were corrected can hold settings it doesn't offer.
+  const recipe = { ...result.recipe, preinfusion: clampPreinfusion(result.recipe.preinfusion) };
   const facts = [
     ["Origin", bean.origin],
     ["Region", bean.region],
@@ -109,7 +111,7 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
             {[
               ["Brew temperature", `${recipe.tempC} °C`],
               ["Shot time", `${recipe.timeMin}–${recipe.timeMax} s`],
-              ["Pre-infusion", recipe.preinfusion.seconds > 0 ? `${recipe.preinfusion.pressureBar} bar, ${recipe.preinfusion.seconds} s` : "Off"],
+              ["Pre-infusion", `${recipe.preinfusion.pressureBar} bar, ${recipe.preinfusion.seconds} s`],
               ["Grind", GRIND_LABEL(recipe.grind)],
             ].map(([label, value]) => (
               <div key={label} className="bg-surface-2 p-4">

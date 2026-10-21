@@ -58,6 +58,19 @@ test("a looked-up coffee stays on the device and reopens without researching it 
   await expect(recipe(later)).toBeVisible();
 });
 
+test("a lookup saved with pre-infusion the Meraki can't do shows the nearest real setting", async ({ page }) => {
+  await page.goto("/bean?q=Guji");
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  await page.evaluate(() => {
+    const lookups = JSON.parse(localStorage.getItem("crema:lookups")!);
+    lookups[0].result.recipe.preinfusion = { pressureBar: 2, seconds: 5 };
+    localStorage.setItem("crema:lookups", JSON.stringify(lookups));
+  });
+  await page.reload();
+  await expect(page.getByText("3 bar, 5 s")).toBeVisible();
+  await expect(page.getByText("Pre-infuse at 3 bar")).toBeVisible();
+});
+
 test("failed research offers a retry", async ({ page }) => {
   await page.route("**/api/brew", (route) =>
     route.fulfill({ status: 502, json: { code: "upstream", message: "The research timed out." } }),

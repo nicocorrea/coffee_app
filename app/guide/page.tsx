@@ -12,7 +12,7 @@ const RULES = [
   ["Bitter, dry or slow", "Go 1 step coarser, or drop the temperature 1 °C. Over-extracted shots taste harsh and hollow."],
   ["Temperature by roast", "Light roasts like 93–96 °C, medium 91–94 °C, dark 88–91 °C. The Meraki holds it steady with PID."],
   ["Ratio sets the style", "1:1.5 is dense and syrupy, 1:2 is classic, 1:2.5 and longer gives clarity and lighter body."],
-  ["Pre-infusion", "A gentle 5–10 s at low pressure evens out the puck. Use the longer end for light roasts and naturals."],
+  ["Pre-infusion", "The Meraki pre-infuses at 3 or 4 bar for 5–15 s. A gentle 5–10 s at 3 bar evens out the puck. Use the longer end for light roasts and naturals."],
   ["Milk on the Meraki", "Steam at least 180 ml so the probe reads accurately. 55–60 °C is the sweet spot; above 65 °C sweetness drops."],
 ];
 

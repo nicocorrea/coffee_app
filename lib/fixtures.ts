@@ -31,7 +31,7 @@ export const DEMO_PROFILE: BeanProfile = {
     doseG: 18,
     yieldG: 40,
     tempC: 94,
-    preinfusion: { pressureBar: 2, seconds: 8 },
+    preinfusion: { pressureBar: 3, seconds: 8 },
     timeMin: 28,
     timeMax: 33,
     grind: {

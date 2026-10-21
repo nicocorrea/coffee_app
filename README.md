@@ -21,7 +21,7 @@ OpenRouter when `OPENROUTER_API_KEY` is set (model `anthropic/claude-opus-5.5`, 
 `openrouter:web_search` tool), or directly to Anthropic with `ANTHROPIC_API_KEY`. A lookup takes about
 15–35 s and costs roughly $0.05–0.10. The
 answer is validated against a zod schema (`lib/schema.ts`) and clamped to what the Meraki Gen 2 can
-actually do (85–96 °C, 14–22 g, 1:1–1:3.5, pre-infusion 1–4 bar for 0–15 s). The drink recipes are then
+actually do (85–96 °C, 14–22 g, 1:1–1:3.5, pre-infusion 3 or 4 bar for 5–15 s). The drink recipes are then
 derived in code from the base recipe (`lib/drinks.ts`), so ratios stay consistent.
 
 Grind advice is relative ("2 steps finer than your usual medium-roast setting"). Meraki doesn't publish
