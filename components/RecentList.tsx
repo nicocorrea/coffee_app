@@ -12,7 +12,7 @@ export function RecentList() {
   if (recent.length === 0) return null;
 
   return (
-    <section aria-labelledby="recent-heading" className="mt-12">
+    <section aria-labelledby="recent-heading" className="mt-12 lg:mt-0">
       <h2 id="recent-heading" className="text-lg font-semibold">
         Recent lookups
       </h2>

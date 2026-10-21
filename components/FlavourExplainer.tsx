@@ -96,21 +96,23 @@ export function FlavourReference() {
           </details>
         ))}
       </div>
-      <h3 className="mt-10 text-xl font-semibold">Taste it in five questions</h3>
-      <p className="mt-2 text-muted">Take a sip and ask these in order. After a couple of weeks you’ll do it without thinking.</p>
-      <ol className="mt-4 space-y-3">
-        {TASTING_QUESTIONS.map((q, i) => (
-          <li key={q.answers} className="flex gap-4">
-            <span className="numerals flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 font-semibold">
-              {i + 1}
-            </span>
-            <span className="pt-1">
-              {q.question}{" "}
-              <span className="text-muted">That’s {FLAVOUR_DIMENSIONS.find((d) => d.key === q.answers)!.label.toLowerCase()}.</span>
-            </span>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-10 lg:mt-0">
+        <h3 className="text-xl font-semibold">Taste it in five questions</h3>
+        <p className="mt-2 text-muted">Take a sip and ask these in order. After a couple of weeks you’ll do it without thinking.</p>
+        <ol className="mt-4 space-y-3">
+          {TASTING_QUESTIONS.map((q, i) => (
+            <li key={q.answers} className="flex gap-4">
+              <span className="numerals flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 font-semibold">
+                {i + 1}
+              </span>
+              <span className="pt-1">
+                {q.question}{" "}
+                <span className="text-muted">That’s {FLAVOUR_DIMENSIONS.find((d) => d.key === q.answers)!.label.toLowerCase()}.</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </>
   );
 }

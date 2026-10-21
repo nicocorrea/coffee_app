@@ -68,9 +68,12 @@ body {
   display: none;
 }
 
-.pb-tabbar {
+@utility pb-tabbar {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
+
+/* Desktop and tall enough to pin the recipe panel while the rest scrolls. */
+@custom-variant tall (@media (width >= 64rem) and (height >= 40rem));
 
 @media (prefers-reduced-motion: reduce) {
   *,
