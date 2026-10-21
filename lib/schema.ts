@@ -28,7 +28,7 @@ export const BaseRecipeSchema = z.object({
   tempC: z.number().describe("Brew boiler temperature in °C (Meraki range 85–96)"),
   preinfusion: z.object({
     pressureBar: z.number().describe("Pre-infusion pressure in whole bar: 3 or 4"),
-    seconds: z.number().describe("Pre-infusion duration in whole seconds (5–15)"),
+    seconds: z.number().describe("Pre-infusion duration in whole seconds (5–15), or 0 to switch it off"),
   }),
   timeMin: z.number().describe("Target shot time lower bound in seconds, from pump start"),
   timeMax: z.number().describe("Target shot time upper bound in seconds"),
@@ -111,7 +111,7 @@ export const LIMITS = {
   tempC: [85, 96],
   doseG: [14, 22],
   ratio: [1, 3.5],
-  // The Meraki Gen 2 offers 3 or 4 bar for 5–15 s, in whole steps.
+  // The Meraki Gen 2 offers 3 or 4 bar for 5–15 s, in whole steps, or pre-infusion off (0 s).
   pressureBar: [3, 4],
   preinfusionS: [5, 15],
   timeS: [15, 45],
@@ -123,10 +123,13 @@ export const clamp = (v: number, [lo, hi]: readonly [number, number]) =>
   Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : lo));
 export const roundTo = (v: number, step: number) => Math.round(v / step) * step;
 
-/** Pre-infusion the Meraki can actually be set to. Also applied to results saved before the limits changed. */
+/**
+ * Pre-infusion the Meraki can actually be set to: 0 s means off, any other time snaps into 5–15 s.
+ * Also applied to results saved before the limits changed.
+ */
 export const clampPreinfusion = (p: BaseRecipe["preinfusion"]): BaseRecipe["preinfusion"] => ({
   pressureBar: Math.round(clamp(p.pressureBar, LIMITS.pressureBar)),
-  seconds: Math.round(clamp(p.seconds, LIMITS.preinfusionS)),
+  seconds: p.seconds <= 0 ? 0 : Math.round(clamp(p.seconds, LIMITS.preinfusionS)),
 });
 
 export function clampProfile(p: BeanProfile): BeanProfile {

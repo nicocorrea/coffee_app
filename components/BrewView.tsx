@@ -111,7 +111,7 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
             {[
               ["Brew temperature", `${recipe.tempC} °C`],
               ["Shot time", `${recipe.timeMin}–${recipe.timeMax} s`],
-              ["Pre-infusion", `${recipe.preinfusion.pressureBar} bar, ${recipe.preinfusion.seconds} s`],
+              ["Pre-infusion", recipe.preinfusion.seconds > 0 ? `${recipe.preinfusion.pressureBar} bar, ${recipe.preinfusion.seconds} s` : "Off"],
               ["Grind", GRIND_LABEL(recipe.grind)],
             ].map(([label, value]) => (
               <div key={label} className="bg-surface-2 p-4">

@@ -47,12 +47,14 @@ describe("clampProfile", () => {
     expect(r.grind.steps).toBe(6);
   });
 
-  it("keeps pre-infusion to what the Meraki offers: 3 or 4 bar for 5–15 s, in whole steps", () => {
+  it("keeps pre-infusion to what the Meraki offers: 3 or 4 bar for 5–15 s in whole steps, or off", () => {
     const at = (pressureBar: number, seconds: number) =>
       clampProfile({ ...DEMO_PROFILE, recipe: { ...DEMO_PROFILE.recipe, preinfusion: { pressureBar, seconds } } }).recipe
         .preinfusion;
     expect(at(2, 5)).toEqual({ pressureBar: 3, seconds: 5 });
-    expect(at(1, 0)).toEqual({ pressureBar: 3, seconds: 5 });
+    expect(at(1, 0)).toEqual({ pressureBar: 3, seconds: 0 }); // off
+    expect(at(3, 2)).toEqual({ pressureBar: 3, seconds: 5 });
+    expect(at(4, -1)).toEqual({ pressureBar: 4, seconds: 0 });
     expect(at(3.5, 7.4)).toEqual({ pressureBar: 4, seconds: 7 });
     expect(at(3.4, 12.6)).toEqual({ pressureBar: 3, seconds: 13 });
   });
