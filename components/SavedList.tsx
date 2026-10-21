@@ -42,13 +42,13 @@ export function SavedList({ variant }: { variant: "strip" | "list" }) {
 
   if (variant === "strip") {
     return (
-      <section aria-labelledby="saved-heading" className="mt-12">
+      <section aria-labelledby="saved-heading" className="mt-12 lg:mt-0">
         <h2 id="saved-heading" className="text-lg font-semibold">
           Your coffees
         </h2>
-        <ul className="-mx-5 mt-3 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar">
+        <ul className="-mx-5 mt-3 flex gap-3 overflow-x-auto px-5 pb-1 no-scrollbar lg:mx-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0">
           {favourites.map((r) => (
-            <li key={favKey(r)} className="w-40 shrink-0">
+            <li key={favKey(r)} className="w-40 shrink-0 lg:w-auto">
               <Link
                 href={`/bean?saved=${encodeURIComponent(favKey(r))}`}
                 className="flex h-full flex-col gap-3 rounded-2xl bg-surface p-4 transition-colors hover:bg-surface-2"

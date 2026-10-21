@@ -33,25 +33,30 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:inset-y-0 lg:right-auto lg:w-60 lg:border-t-0 lg:border-r lg:bg-surface/60 lg:px-4 lg:pt-10 lg:pb-0"
     >
-      <ul className="mx-auto flex max-w-xl">
+      {/* On desktop the bottom tab bar becomes a sidebar with the app name. */}
+      <Link href="/" className="mb-10 hidden px-3 lg:block">
+        <span className="condensed block text-[2.5rem] leading-none font-bold tracking-tight">Crema</span>
+        <span className="mt-1 block text-sm text-cascara">for Meraki Gen 2</span>
+      </Link>
+      <ul className="mx-auto flex max-w-xl lg:flex-col lg:gap-1">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           return (
-            <li key={tab.href} className="flex-1">
+            <li key={tab.href} className="flex-1 lg:flex-none">
               <Link
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
-                  active ? "text-ink" : "text-muted hover:text-ink"
+                className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors lg:min-h-12 lg:flex-row lg:justify-start lg:gap-3 lg:rounded-xl lg:px-3 lg:text-base ${
+                  active ? "text-ink lg:bg-surface-2" : "text-muted hover:text-ink lg:hover:bg-surface"
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.7} aria-hidden>
                   {tab.icon}
                 </svg>
                 {tab.label}
-                <span className={`h-0.5 w-5 rounded-full ${active ? "bg-cascara" : "bg-transparent"}`} />
+                <span className={`h-0.5 w-5 rounded-full lg:hidden ${active ? "bg-cascara" : "bg-transparent"}`} />
               </Link>
             </li>
           );

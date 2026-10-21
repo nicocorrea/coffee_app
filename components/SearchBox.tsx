@@ -49,7 +49,7 @@ export function SearchBox({ initial = "" }: { initial?: string }) {
         </button>
       </form>
 
-      <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar" aria-label="Examples">
+      <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar lg:mx-0 lg:flex-wrap lg:px-0" aria-label="Examples">
         {EXAMPLES.map((ex) => (
           <button
             key={ex}

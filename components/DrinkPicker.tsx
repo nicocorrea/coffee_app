@@ -10,7 +10,7 @@ export function DrinkPicker({ drinks, best = [] }: { drinks: DrinkRecipe[]; best
 
   return (
     <div>
-      <div role="tablist" aria-label="Drinks" className="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 no-scrollbar">
+      <div role="tablist" aria-label="Drinks" className="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 no-scrollbar lg:mx-0 lg:flex-wrap lg:px-0">
         {drinks.map((d) => {
           const active = d.id === drink.id;
           return (

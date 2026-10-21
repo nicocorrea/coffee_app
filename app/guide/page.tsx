@@ -18,13 +18,16 @@ const RULES = [
 
 export default function GuidePage() {
   return (
-    <main className="px-5 pt-8">
-      <h1 className="condensed text-[2.75rem] leading-none font-bold tracking-tight">Every drink, by ratio</h1>
-      <p className="mt-4 leading-relaxed text-muted">
-        The classic reference: 18 g in, 36 g out at 93 °C in 25–30 s. Look up a coffee to get these tuned to the bean.
-      </p>
+    // Desktop: the ratio table and the dial-in rules sit side by side, the rest spans both columns.
+    <main className="px-5 pt-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16 lg:px-12 lg:pt-16">
+      <div className="lg:col-span-2">
+        <h1 className="condensed text-[2.75rem] leading-none font-bold tracking-tight lg:text-[4rem]">Every drink, by ratio</h1>
+        <p className="mt-4 max-w-2xl leading-relaxed text-muted lg:text-lg">
+          The classic reference: 18 g in, 36 g out at 93 °C in 25–30 s. Look up a coffee to get these tuned to the bean.
+        </p>
+      </div>
 
-      <table className="mt-8 w-full text-left">
+      <table className="mt-8 w-full text-left lg:mt-10">
         <thead className="text-sm text-muted">
           <tr className="border-b border-line">
             <th scope="col" className="py-2 font-normal">Drink</th>
@@ -47,11 +50,11 @@ export default function GuidePage() {
         </tbody>
       </table>
 
-      <section aria-labelledby="recipes" className="mt-14">
+      <section aria-labelledby="recipes" className="mt-14 lg:col-span-2 lg:mt-20">
         <h2 id="recipes" className="text-2xl font-semibold tracking-tight">
           Full recipes
         </h2>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0">
           {drinks.map((d) => (
             <details key={d.id} className="group rounded-2xl bg-surface open:pb-5">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-5 text-lg font-medium [&::-webkit-details-marker]:hidden">
@@ -68,19 +71,19 @@ export default function GuidePage() {
         </div>
       </section>
 
-      <section aria-labelledby="flavour" className="mt-14">
+      <section aria-labelledby="flavour" className="mt-14 lg:col-span-2 lg:mt-20">
         <h2 id="flavour" className="text-2xl font-semibold tracking-tight">
           Reading the flavour chart
         </h2>
         <p className="mt-2 leading-relaxed text-muted">
           Every coffee is scored from 1 to 5 on five qualities. Here’s what each one means, with foods to compare.
         </p>
-        <div className="mt-5">
+        <div className="mt-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16">
           <FlavourReference />
         </div>
       </section>
 
-      <section aria-labelledby="rules" className="mt-14">
+      <section aria-labelledby="rules" className="mt-14 lg:col-start-2 lg:row-start-2 lg:mt-10">
         <h2 id="rules" className="text-2xl font-semibold tracking-tight">
           Dialling in on the Meraki
         </h2>

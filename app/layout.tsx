@@ -26,7 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${bricolage.variable} antialiased`}>
       <body className="min-h-dvh">
-        <div className="mx-auto min-h-dvh max-w-xl pb-tabbar pt-[env(safe-area-inset-top)]">{children}</div>
+        <div className="lg:pl-60">
+          <div className="mx-auto min-h-dvh max-w-xl pb-tabbar pt-[env(safe-area-inset-top)] lg:max-w-6xl lg:pb-20">
+            {children}
+          </div>
+        </div>
         <TabBar />
       </body>
     </html>

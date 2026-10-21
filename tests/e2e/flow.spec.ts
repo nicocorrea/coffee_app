@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { devices, expect, test } from "@playwright/test";
 
 test("search, read the recipe, pick a drink, save and reopen offline", async ({ page }) => {
   await page.goto("/");
@@ -117,4 +117,38 @@ test("flavour qualities explain themselves on the recipe and in the guide", asyn
   await expect(page.getByText("like good dark chocolate or red wine")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Taste it in five questions" })).toBeVisible();
   await expect(page.locator("ol > li")).toHaveCount(5);
+});
+
+test.describe("desktop", () => {
+  // A laptop browser; the file's iPhone settings would otherwise apply.
+  test.use({
+    viewport: { width: 1440, height: 900 },
+    userAgent: devices["Desktop Chrome"].userAgent,
+    deviceScaleFactor: 1,
+    isMobile: false,
+    hasTouch: false,
+  });
+
+  test("uses a sidebar and never scrolls sideways", async ({ page }) => {
+    for (const url of ["/", "/saved", "/guide", "/bean?q=Guji"]) {
+      await page.goto(url);
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, url).toBeLessThanOrEqual(0);
+    }
+    const nav = await page.getByRole("navigation", { name: "Main" }).boundingBox();
+    expect(nav?.x).toBe(0);
+    expect(nav?.height).toBe(900);
+  });
+
+  test("keeps the recipe beside the details while they scroll", async ({ page }) => {
+    await page.goto("/bean?q=Guji");
+    const recipe = page.getByRole("region", { name: "Your Meraki Gen 2 recipe" });
+    const flavour = page.getByRole("region", { name: "How it tastes" });
+    const [r, f] = [await recipe.boundingBox(), await flavour.boundingBox()];
+    expect(f!.x).toBeGreaterThan(r!.x + r!.width);
+
+    await page.getByRole("heading", { name: "Before you brew" }).scrollIntoViewIfNeeded();
+    await expect(recipe).toBeInViewport();
+  });
 });
