@@ -36,7 +36,10 @@ export function DrinkPicker({ drinks, best = [] }: { drinks: DrinkRecipe[]; best
         })}
       </div>
       <div id="drink-panel" role="tabpanel" aria-label={drink.name} className="mt-6 rounded-2xl bg-surface p-5">
-        <DrinkCard drink={drink} />
+        {/* Keyed so the card rises in each time you pick a drink. */}
+        <div key={drink.id} className="animate-rise">
+          <DrinkCard drink={drink} />
+        </div>
       </div>
     </div>
   );

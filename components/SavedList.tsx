@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { favKey, useFavourites } from "@/lib/favourites";
 import type { BrewResult } from "@/lib/schema";
+import { BeanName } from "./BeanName";
 import { RoastDot } from "./RoastSwatch";
 
 /** One coffee in a list: name, where it's from, and the numbers you set on the machine. */
@@ -11,7 +12,7 @@ export function CoffeeRow({ result: r, href }: { result: BrewResult; href: strin
     <Link href={href} className="flex min-h-20 items-center gap-4 py-4">
       <RoastDot roast={r.bean.roastLevel} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-lg font-medium">{r.bean.name}</span>
+        <BeanName result={r} className="inline-block max-w-full truncate align-top text-lg font-medium" />
         <span className="block truncate text-sm text-muted">
           {[r.bean.roaster, r.bean.origin, r.bean.process].filter(Boolean).join(", ")}
         </span>
@@ -54,7 +55,7 @@ export function SavedList({ variant }: { variant: "strip" | "list" }) {
                 className="flex h-full flex-col gap-3 rounded-2xl bg-surface p-4 transition-colors hover:bg-surface-2"
               >
                 <RoastDot roast={r.bean.roastLevel} className="size-8" />
-                <span className="line-clamp-2 font-medium leading-snug">{r.bean.name}</span>
+                <BeanName result={r} className="line-clamp-2 font-medium leading-snug" />
                 <span className="numerals mt-auto text-sm text-muted">
                   {r.recipe.doseG} g in, {r.recipe.yieldG} g out
                 </span>
