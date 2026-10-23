@@ -3,7 +3,7 @@
 A mobile-first web app. Search any coffee (a roaster and bag, or an origin and process) and get:
 
 - what the coffee is: origin, region, process, variety, altitude and roast level
-- how it tastes: tasting notes, a flavour radar and a description of its character
+- how it tastes: tasting notes, a flavour radar (acidity, sweetness, body, creaminess, bitterness, finish) and a description of its character
 - a starting recipe for the **Meraki Gen 2**: dose, yield, ratio, brew temperature, pre-infusion
   (pressure and seconds), target shot time and grind direction
 - recipes for 12 drinks (ristretto, espresso, doppio, lungo, americano, long black, macchiato,

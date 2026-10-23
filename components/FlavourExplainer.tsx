@@ -1,4 +1,4 @@
-import { FLAVOUR_DIMENSIONS, TASTING_QUESTIONS, levelOf, type FlavourDimension, type FlavourLevel } from "@/lib/flavour";
+import { FLAVOUR_DIMENSIONS, TASTING_QUESTIONS, levelOf, scoreOf, type FlavourDimension, type FlavourLevel } from "@/lib/flavour";
 import type { BeanProfile } from "@/lib/schema";
 
 const LEVELS: FlavourLevel[] = ["low", "mid", "high"];
@@ -51,20 +51,22 @@ export function FlavourRows({ flavour }: { flavour: BeanProfile["flavour"] }) {
       <p className="text-sm text-muted">Tap a quality to see what it means.</p>
       <div className="mt-2 divide-y divide-line border-y border-line">
         {FLAVOUR_DIMENSIONS.map((d) => {
-          const score = flavour[d.key];
-          const level = levelOf(score);
+          const score = scoreOf(flavour, d.key);
+          const level = score === null ? undefined : levelOf(score);
           return (
             <details key={d.key} className="group">
               <summary className="flex cursor-pointer list-none gap-3 py-4 [&::-webkit-details-marker]:hidden">
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-3">
                     <span className="w-24 font-medium">{d.label}</span>
-                    <Pips score={score} />
+                    <Pips score={score ?? 0} />
                     <span className="numerals ml-auto text-sm text-muted">
-                      {d.levels[level].label}, {score}/5
+                      {level ? `${d.levels[level].label}, ${score}/5` : "–"}
                     </span>
                   </span>
-                  <span className="mt-1 block text-[0.95rem] leading-relaxed text-muted">{d.levels[level].example}</span>
+                  <span className="mt-1 block text-[0.95rem] leading-relaxed text-muted">
+                    {level ? d.levels[level].example : "Not rated for this saved coffee. Search for it again to get a score."}
+                  </span>
                 </span>
                 <Chevron />
               </summary>
@@ -97,7 +99,7 @@ export function FlavourReference() {
         ))}
       </div>
       <div className="mt-10 lg:mt-0">
-        <h3 className="text-xl font-semibold">Taste it in five questions</h3>
+        <h3 className="text-xl font-semibold">Taste it in six questions</h3>
         <p className="mt-2 text-muted">Take a sip and ask these in order. After a couple of weeks you’ll do it without thinking.</p>
         <ol className="mt-4 space-y-3">
           {TASTING_QUESTIONS.map((q, i) => (

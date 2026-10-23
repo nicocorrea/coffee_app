@@ -22,6 +22,7 @@ export const DEMO_PROFILE: BeanProfile = {
     acidity: 4,
     sweetness: 5,
     body: 3,
+    creaminess: 3,
     bitterness: 2,
     finish: 4,
     character:

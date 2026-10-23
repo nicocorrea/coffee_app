@@ -25,7 +25,7 @@ describe("BeanProfileSchema", () => {
 describe("clampProfile", () => {
   const wild = {
     ...DEMO_PROFILE,
-    flavour: { ...DEMO_PROFILE.flavour, acidity: 9, body: 0 },
+    flavour: { ...DEMO_PROFILE.flavour, acidity: 9, body: 0, creaminess: 7 },
     recipe: {
       ...DEMO_PROFILE.recipe,
       doseG: 30,
@@ -72,5 +72,6 @@ describe("clampProfile", () => {
     const f = clampProfile(wild).flavour;
     expect(f.acidity).toBe(5);
     expect(f.body).toBe(1);
+    expect(f.creaminess).toBe(5);
   });
 });

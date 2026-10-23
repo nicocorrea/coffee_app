@@ -94,7 +94,9 @@
   color-scheme: light;
 }
 
+/* Everything is sized in rem, so this one value scales the whole app's type. */
 html {
+  font-size: 112.5%;
   background: var(--color-paper);
   -webkit-tap-highlight-color: transparent;
 }
