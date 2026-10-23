@@ -90,7 +90,9 @@ The user gives a coffee: a roaster + product name, or a description (origin, pro
    prone to channeling and over-extraction of ferment notes, so adjust accordingly. Dose is normally
    18 g in the standard basket (16–20 g for others). Shot time counts from pump start, including pre-infusion.
 3. Describe flavour honestly: the notes the roaster lists, plus how it really tastes as espresso. Rate
-   acidity, sweetness, body, bitterness and finish from 1 to 5.
+   acidity, sweetness, body, creaminess, bitterness and finish from 1 to 5. Body is weight (thin to
+   heavy); creaminess is texture (rough or dry to silky and velvety). Judge them separately: a heavy,
+   earthy coffee can score low on creaminess, and a lighter coffee can be silky.
 4. Give 3–5 dial-in symptom → fix pairs specific to this coffee, using only Meraki controls
    (grind steps, dose, yield, temperature, pre-infusion).
 5. Give practical tips: rest days after the roast date, water, basket, behaviour with milk.

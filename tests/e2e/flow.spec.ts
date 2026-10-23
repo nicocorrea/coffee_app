@@ -154,8 +154,8 @@ test("flavour qualities explain themselves on the recipe and in the guide", asyn
   await expect(page.getByRole("heading", { name: "Reading the flavour chart" })).toBeVisible();
   await page.locator("summary", { hasText: /^Finish$/ }).click();
   await expect(page.getByText("like good dark chocolate or red wine")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Taste it in five questions" })).toBeVisible();
-  await expect(page.locator("ol > li")).toHaveCount(5);
+  await expect(page.getByRole("heading", { name: "Taste it in six questions" })).toBeVisible();
+  await expect(page.locator("ol > li")).toHaveCount(6);
 });
 
 test.describe("desktop", () => {

@@ -1,6 +1,6 @@
 import type { BeanProfile } from "./schema";
 
-export type FlavourKey = keyof Pick<BeanProfile["flavour"], "acidity" | "sweetness" | "body" | "bitterness" | "finish">;
+export type FlavourKey = keyof Pick<BeanProfile["flavour"], "acidity" | "sweetness" | "body" | "creaminess" | "bitterness" | "finish">;
 export type FlavourLevel = "low" | "mid" | "high";
 
 export interface FlavourDimension {
@@ -44,13 +44,26 @@ export const FLAVOUR_DIMENSIONS: FlavourDimension[] = [
   {
     key: "body",
     label: "Body",
-    what: "The weight and texture in your mouth, not the flavour. How thin or thick the coffee feels.",
+    what: "The weight in your mouth, not the flavour: how thin or thick the coffee feels. A heavy coffee isn’t always smooth; that’s creaminess.",
     levels: {
       low: { label: "Light", example: "Thin, like water, tea or apple juice." },
       mid: { label: "Medium", example: "Like skimmed milk." },
       high: {
         label: "Heavy",
-        example: "Like whole milk, cream or peach nectar. Common in Brazilian coffees and darker roasts.",
+        example: "Full and weighty, like tomato juice or peach nectar. Common in Brazilian coffees and darker roasts.",
+      },
+    },
+  },
+  {
+    key: "creaminess",
+    label: "Creaminess",
+    what: "How smooth and silky the coffee feels as it coats your mouth. Body is how heavy it is; creaminess is how soft. A coffee can be heavy but rough, or light but silky.",
+    levels: {
+      low: { label: "Rough", example: "Dry or a little gritty, like strong black tea or unripe fruit skin." },
+      mid: { label: "Smooth", example: "Soft and even, like a cup of cocoa made with water." },
+      high: {
+        label: "Creamy",
+        example: "Silky and velvety, like melted chocolate or heavy cream. Typical of Italian-style blends with Brazilian coffee.",
       },
     },
   },
@@ -85,6 +98,10 @@ export const FLAVOUR_DIMENSIONS: FlavourDimension[] = [
 
 export const levelOf = (score: number): FlavourLevel => (score <= 2 ? "low" : score === 3 ? "mid" : "high");
 
+/** A coffee's score for one quality, or null for results saved before that quality existed. */
+export const scoreOf = (flavour: BeanProfile["flavour"], key: FlavourKey): number | null =>
+  typeof flavour[key] === "number" ? flavour[key] : null;
+
 export function describeScore(key: FlavourKey, score: number) {
   const dimension = FLAVOUR_DIMENSIONS.find((d) => d.key === key)!;
   return dimension.levels[levelOf(score)];
@@ -94,7 +111,8 @@ export function describeScore(key: FlavourKey, score: number) {
 export const TASTING_QUESTIONS: { question: string; answers: FlavourKey }[] = [
   { question: "Does it make your mouth water?", answers: "acidity" },
   { question: "Does it taste round and pleasant?", answers: "sweetness" },
-  { question: "Is it watery or creamy?", answers: "body" },
+  { question: "Does it feel thin or heavy?", answers: "body" },
+  { question: "Does it feel silky or rough?", answers: "creaminess" },
   { question: "Does it catch at the back of your tongue?", answers: "bitterness" },
   { question: "How long does the taste last?", answers: "finish" },
 ];
