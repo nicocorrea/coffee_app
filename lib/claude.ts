@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { BeanProfileSchema, clampProfile, type BeanProfile } from "./schema";
 
@@ -7,6 +6,8 @@ export const DEFAULT_MODEL = "claude-opus-5-5";
 export const OPENROUTER_DEFAULT_MODEL = "anthropic/claude-opus-5.5";
 const OPENROUTER_FALLBACK_MODEL = "anthropic/claude-opus-5";
 const MAX_CONTINUATIONS = 3;
+/** Rounds of showing Claude why its JSON was rejected before giving up. */
+const MAX_REPAIRS = 2;
 /** One budget for the whole lookup, inside the route's 120 s maxDuration. */
 const DEADLINE_MS = 110_000;
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
@@ -196,13 +197,14 @@ export async function fetchBeanProfile(
     if (!response) throw new BrewError("upstream", "No response");
     if (response.stop_reason === "refusal") throw new BrewError("refused", "The model declined this request");
 
-    const text = textOf(response.content);
-    try {
-      const parsed = BeanProfileSchema.safeParse(extractJson(text));
-      if (parsed.success) return { profile: clampProfile(parsed.data), model: response.model };
-    } catch {}
-
-    return { profile: await reformat(client, model, routing, query, text, signal), model: response.model };
+    let answer = textOf(response.content);
+    let result = check(answer);
+    for (let i = 0; "problems" in result && i < MAX_REPAIRS; i++) {
+      answer = await repair(client, model, routing, query, answer, result.problems, signal);
+      result = check(answer);
+    }
+    if ("problems" in result) throw new BrewError("bad_model_output", "The model returned an unexpected format");
+    return { profile: result.profile, model: response.model };
   } catch (err) {
     if (err instanceof BrewError) throw err;
     if (signal.aborted) throw new BrewError("upstream", "The research took too long. Try again, or add the roaster's name.");
@@ -210,30 +212,53 @@ export async function fetchBeanProfile(
   }
 }
 
-/** Second chance: structured outputs guarantee schema-shaped JSON from the research notes. */
-async function reformat(
+/** A valid profile from Claude's answer, or why it isn't one, worded for Claude to fix. */
+function check(answer: string): { profile: BeanProfile } | { problems: string } {
+  let json: unknown;
+  try {
+    json = extractJson(answer);
+  } catch {
+    return { problems: "- Your answer had no JSON object." };
+  }
+  const parsed = BeanProfileSchema.safeParse(json);
+  if (parsed.success) return { profile: clampProfile(parsed.data) };
+  return {
+    problems: parsed.error.issues
+      .slice(0, 20)
+      .map((issue) => `- ${issue.path.join(".") || "(top level)"}: ${issue.message}`)
+      .join("\n"),
+  };
+}
+
+/**
+ * Second chance: show Claude why its answer was rejected and ask for the corrected object. This used to
+ * force the format with structured outputs, but the provider caps the grammar it compiles from a schema,
+ * and this schema outgrew it. A repair has no such limit, so the schema can keep growing.
+ */
+async function repair(
   client: Anthropic,
   model: string,
   routing: Routing,
   query: string,
-  research: string,
+  answer: string,
+  problems: string,
   signal: AbortSignal,
-): Promise<BeanProfile> {
-  const response = await client.beta.messages.parse({
+): Promise<string> {
+  const response = await client.beta.messages.create({
     model,
     max_tokens: 16000,
     system: buildSystemPrompt(),
     messages: [
+      { role: "user", content: `Coffee to research: ${query}` },
+      { role: "assistant", content: answer.trim() || "(no answer)" },
       {
         role: "user",
-        content: `Coffee: ${query}\n\nResearch notes from a previous step:\n${research || "(none)"}\n\nProduce the final JSON object.`,
+        content: `That answer doesn't match the JSON Schema:\n${problems}\n\nReply with the complete, corrected JSON object and nothing else. Keep everything that was already right.`,
       },
     ],
-    output_config: { effort: "low", format: betaZodOutputFormat(BeanProfileSchema) },
+    output_config: { effort: "low" },
     ...routing,
   }, { signal });
   if (response.stop_reason === "refusal") throw new BrewError("refused", "The model declined this request");
-  const parsed = BeanProfileSchema.safeParse(response.parsed_output);
-  if (!parsed.success) throw new BrewError("bad_model_output", "The model returned an unexpected format");
-  return clampProfile(parsed.data);
+  return textOf(response.content);
 }

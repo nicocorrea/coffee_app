@@ -1,10 +1,8 @@
 import { z } from "zod";
 
-// The schema doubles as a structured-output format for Claude, so it avoids numeric
-// min/max constraints and optional fields. Machine limits are enforced by clampProfile.
-// The provider also caps the size of the grammar it compiles from the schema, and as of
-// October 2026 this schema is right at that cap: adding even one string field makes the
-// reformat fallback in claude.ts fail with "The compiled grammar is too large".
+// Claude sees this schema as JSON Schema in its prompt, and its answer is validated against it.
+// It avoids numeric min/max constraints and optional fields: machine limits are enforced by
+// clampProfile, so a slightly-off number is corrected rather than rejected.
 
 export const ROAST_LEVELS = ["light", "medium-light", "medium", "medium-dark", "dark"] as const;
 export type RoastLevel = (typeof ROAST_LEVELS)[number];
