@@ -158,6 +158,18 @@ test("flavour qualities explain themselves on the recipe and in the guide", asyn
   await expect(page.locator("ol > li")).toHaveCount(6);
 });
 
+test("tasting notes show what to expect, strongest first, each with a photo", async ({ page }) => {
+  await page.goto("/bean?q=Guji");
+  const notes = page.locator("section[aria-labelledby=flavour] ol > li");
+  await expect(notes).toHaveCount(4);
+  await expect(notes.first().getByRole("heading")).toHaveText("1. Blueberry, the main impression");
+  await expect(notes.nth(2)).toContainText("more when you smell the cup");
+  for (const img of await notes.locator("img").all()) {
+    await expect(img).toHaveJSProperty("complete", true);
+    expect(await img.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  }
+});
+
 test.describe("desktop", () => {
   // A laptop browser; the file's iPhone settings would otherwise apply.
   test.use({

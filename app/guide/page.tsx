@@ -1,6 +1,8 @@
 import { DrinkCard } from "@/components/DrinkCard";
 import { FlavourReference } from "@/components/FlavourExplainer";
 import { CLASSIC_BASE, deriveDrinks } from "@/lib/drinks";
+import { NOTE_PHOTO_CREDITS } from "@/lib/note-photo-credits";
+import { NOTE_PHOTOS, NOTE_PHOTO_IDS } from "@/lib/tasting-notes";
 
 export const metadata = { title: "Guide" };
 
@@ -95,6 +97,32 @@ export default function GuidePage() {
             </div>
           ))}
         </dl>
+      </section>
+
+      <section aria-labelledby="credits" className="mt-14 lg:col-span-2 lg:mt-20">
+        <details className="group">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-muted [&::-webkit-details-marker]:hidden">
+            <h2 id="credits" className="font-medium">
+              Tasting-note photo credits
+            </h2>
+            <svg viewBox="0 0 24 24" className="size-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </summary>
+          <ul className="mt-3 columns-1 gap-8 text-sm leading-relaxed text-muted sm:columns-2 lg:columns-3">
+            {NOTE_PHOTO_IDS.map((id) => {
+              const credit = NOTE_PHOTO_CREDITS[id];
+              return (
+                <li key={id} className="break-inside-avoid py-0.5">
+                  <a href={credit.url} className="underline decoration-line underline-offset-2 hover:text-ink">
+                    {NOTE_PHOTOS[id]}
+                  </a>
+                  : {credit.creator}, {credit.license}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
       </section>
     </main>
   );
