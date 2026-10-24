@@ -18,12 +18,11 @@ const ANTHROPIC: Provider = { name: "anthropic", model: "claude-opus-5-5", baseU
 const OPENROUTER: Provider = { name: "openrouter", model: "anthropic/claude-opus-5.5", baseURL: "https://openrouter.ai/api", apiKey: "sk-or-test" };
 const fetchBeanProfile = (q: string, client: Anthropic, opts?: { signal?: AbortSignal }) => fetchWith(q, ANTHROPIC, client, opts);
 
-function fakeClient(responses: unknown[], parsed?: unknown) {
+function fakeClient(responses: unknown[]) {
   const create = vi.fn();
   for (const r of responses) create.mockResolvedValueOnce(r);
-  const parse = vi.fn().mockResolvedValue({ model: "claude-opus-5-5", stop_reason: "end_turn", parsed_output: parsed ?? null });
-  const client = { beta: { messages: { create, parse } } } as unknown as Anthropic;
-  return { client, create, parse };
+  const client = { beta: { messages: { create } } } as unknown as Anthropic;
+  return { client, create };
 }
 
 describe("extractJson", () => {
@@ -108,18 +107,38 @@ describe("fetchBeanProfile", () => {
     await expect(fetchBeanProfile("x", client)).rejects.toMatchObject({ code: "refused" });
   });
 
-  it("reformats with structured outputs when the JSON is unusable", async () => {
-    const { client, parse } = fakeClient([msg("Lovely coffee, no JSON though.")], DEMO_PROFILE);
+  it("asks Claude to repair an answer with no JSON, without tools", async () => {
+    const { client, create } = fakeClient([msg("Lovely coffee, no JSON though."), msg(json)]);
     const { profile } = await fetchBeanProfile("Guji", client);
-    expect(parse).toHaveBeenCalledTimes(1);
     expect(profile.bean.origin).toBe("Ethiopia");
+    expect(create).toHaveBeenCalledTimes(2);
+    const repair = create.mock.calls[1][0];
+    expect(repair.tools).toBeUndefined();
+    expect(repair.output_config.format).toBeUndefined();
+    expect(repair.messages.at(-2)).toEqual({ role: "assistant", content: "Lovely coffee, no JSON though." });
+    expect(repair.messages.at(-1).content).toContain("no JSON object");
   });
 
-  it("throws bad_model_output when the reformat also fails", async () => {
-    const { client } = fakeClient([msg("nope")], { nonsense: true });
+  it("tells Claude exactly which fields failed", async () => {
+    const [first, ...rest] = DEMO_PROFILE.flavour.notes;
+    const broken = { ...DEMO_PROFILE, flavour: { ...DEMO_PROFILE.flavour, notes: [{ name: first.name, role: first.role }, ...rest] } };
+    const { client, create } = fakeClient([msg(JSON.stringify(broken)), msg(json)]);
+    const { profile } = await fetchBeanProfile("Guji", client);
+    expect(profile.flavour.notes).toHaveLength(DEMO_PROFILE.flavour.notes.length);
+    expect(create.mock.calls[1][0].messages.at(-1).content).toContain("flavour.notes.0.description");
+  });
+
+  it("throws bad_model_output when the repairs also fail", async () => {
+    const { client, create } = fakeClient([msg("nope"), msg("still nope"), msg('{"nonsense":true}')]);
     const err = await fetchBeanProfile("Guji", client).catch((e) => e);
     expect(err).toBeInstanceOf(BrewError);
     expect(err.code).toBe("bad_model_output");
+    expect(create).toHaveBeenCalledTimes(3);
+  });
+
+  it("throws refused when a repair is refused", async () => {
+    const { client } = fakeClient([msg("nope"), msg("", "refusal")]);
+    await expect(fetchBeanProfile("Guji", client)).rejects.toMatchObject({ code: "refused" });
   });
 
   it("bounds every request with one overall deadline", async () => {
@@ -133,7 +152,7 @@ describe("fetchBeanProfile", () => {
   it("reports a timeout as a retryable upstream error", async () => {
     const err = Object.assign(new Error("Request was aborted."), { name: "APIUserAbortError" });
     const create = vi.fn().mockRejectedValue(err);
-    const client = { beta: { messages: { create, parse: vi.fn() } } } as unknown as Anthropic;
+    const client = { beta: { messages: { create } } } as unknown as Anthropic;
     await expect(fetchBeanProfile("Guji", client, { signal: AbortSignal.abort() })).rejects.toMatchObject({
       code: "upstream",
       message: expect.stringContaining("too long"),
@@ -142,7 +161,7 @@ describe("fetchBeanProfile", () => {
 
   it("wraps SDK failures as upstream errors", async () => {
     const create = vi.fn().mockRejectedValue(new Error("socket hang up"));
-    const client = { beta: { messages: { create, parse: vi.fn() } } } as unknown as Anthropic;
+    const client = { beta: { messages: { create } } } as unknown as Anthropic;
     await expect(fetchBeanProfile("Guji", client)).rejects.toMatchObject({ code: "upstream" });
   });
 });
