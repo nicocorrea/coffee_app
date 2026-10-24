@@ -85,7 +85,7 @@ export default function GuidePage() {
           Reading the flavour chart
         </h2>
         <p className="mt-2 leading-relaxed text-muted">
-          Every coffee is scored from 1 to 5 on five qualities. Here’s what each one means, with foods to compare.
+          Every coffee is scored from 1 to 5 on six qualities. Here’s what each one means, with foods to compare.
         </p>
         <div className="mt-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16">
           <FlavourReference />
