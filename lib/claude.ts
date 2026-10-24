@@ -93,6 +93,13 @@ The user gives a coffee: a roaster + product name, or a description (origin, pro
    acidity, sweetness, body, creaminess, bitterness and finish from 1 to 5. Body is weight (thin to
    heavy); creaminess is texture (rough or dry to silky and velvety). Judge them separately: a heavy,
    earthy coffee can score low on creaminess, and a lighter coffee can be silky.
+   The user reads the tasting notes before pulling the shot, to know what to expect in the mouth. List
+   3–5, the most noticeable first. Give each a role ("the main impression", "a gentle sweetness",
+   "mostly in the aroma") and two short sentences comparing it to something they have eaten: what it
+   is like, how strong it is, and whether it shows on the first sip, in the finish or in the smell.
+   Be precise ("dark chocolate, 60–70%: rich and slightly bitter, not sugary"). For the photo, pick the
+   closest one in the library; for a note it lacks choose the nearest family (bergamot → orange,
+   molasses → brown sugar, dates → fig).
 4. Give 3–5 dial-in symptom → fix pairs specific to this coffee, using only Meraki controls
    (grind steps, dose, yield, temperature, pre-infusion).
 5. Give practical tips: rest days after the roast date, water, basket, behaviour with milk.

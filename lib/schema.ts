@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NOTE_PHOTO_IDS } from "./tasting-notes";
 
 // The schema doubles as a structured-output format for Claude, so it avoids numeric
 // min/max constraints and optional fields. Machine limits are enforced by clampProfile.
@@ -56,7 +57,18 @@ export const BeanProfileSchema = z.object({
     description: z.string().describe("Two or three sentences on the coffee's story and character"),
   }),
   flavour: z.object({
-    notes: z.array(z.string()).describe("3–6 tasting notes"),
+    notes: z
+      .array(
+        z.object({
+          name: z.string().describe("The note as the drinker would say it, e.g. 'Toasted hazelnut'"),
+          role: z.string().describe("Its part in the cup in a few words, e.g. 'the main impression', 'a gentle sweetness', 'mostly in the aroma'"),
+          description: z
+            .string()
+            .describe("Two short sentences in everyday food terms: what it is like, how strong, and when you notice it"),
+          photo: z.enum(NOTE_PHOTO_IDS).describe("The closest photo in the library; for a rare note pick its nearest family"),
+        }),
+      )
+      .describe("3–5 tasting notes, the most noticeable first"),
     acidity: z.number().describe("1–5"),
     sweetness: z.number().describe("1–5"),
     body: z.number().describe("1–5"),

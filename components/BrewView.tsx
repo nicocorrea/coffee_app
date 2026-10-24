@@ -12,6 +12,7 @@ import { FlavourRadar } from "./FlavourRadar";
 import { RoastRamp } from "./RoastSwatch";
 import { SearchBox } from "./SearchBox";
 import { ShotTimeline } from "./ShotTimeline";
+import { TastingNotes } from "./TastingNotes";
 
 function Section({ id, title, className = "", children }: { id: string; title: string; className?: string; children: React.ReactNode }) {
   return (
@@ -142,14 +143,10 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
 
         <div>
           <Section id="flavour" title="How it tastes" className="lg:mt-0">
-            <ul className="flex flex-wrap gap-2">
-              {flavour.notes.map((n) => (
-                <li key={n} className="rounded-full bg-surface-2 px-3.5 py-1.5 text-[0.95rem]">
-                  {n}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-5 text-[1.05rem] leading-relaxed">{flavour.character}</p>
+            <p className="text-[1.05rem] leading-relaxed">{flavour.character}</p>
+            <div className="mt-6">
+              <TastingNotes notes={flavour.notes} />
+            </div>
             <div className="mt-6">
               <FlavourRadar flavour={flavour} />
             </div>
