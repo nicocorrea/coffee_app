@@ -3,6 +3,8 @@ import { isDetailedNote, notePhotoSrc, type TastingNote } from "@/lib/tasting-no
 
 /** What to expect in the mouth, most noticeable first, each with a photo of the food it tastes like. */
 export function TastingNotes({ notes }: { notes: (TastingNote | string)[] }) {
+  // The schema can't require a minimum for structured output, so a lookup may come back with none.
+  if (notes.length === 0) return null;
   if (!notes.every(isDetailedNote)) {
     return (
       <ul className="flex flex-wrap gap-2">

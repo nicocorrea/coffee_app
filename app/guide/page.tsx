@@ -18,6 +18,13 @@ const RULES = [
   ["Milk on the Meraki", "Steam at least 180 ml so the probe reads accurately. 55–60 °C is the sweet spot; above 65 °C sweetness drops."],
 ];
 
+/** CC licences ask for a link to their text beside each credit. Public-domain photos need none. */
+function licenseUrl(license: string): string | null {
+  if (license === "CC0") return "https://creativecommons.org/publicdomain/zero/1.0/";
+  const cc = license.match(/^CC (BY(?:-SA)?) (\d\.\d)/);
+  return cc ? `https://creativecommons.org/licenses/${cc[1].toLowerCase()}/${cc[2]}/` : null;
+}
+
 export default function GuidePage() {
   return (
     // Desktop: the ratio table and the dial-in rules sit side by side, the rest spans both columns.
@@ -117,7 +124,14 @@ export default function GuidePage() {
                   <a href={credit.url} className="underline decoration-line underline-offset-2 hover:text-ink">
                     {NOTE_PHOTOS[id]}
                   </a>
-                  : {credit.creator}, {credit.license}
+                  : {credit.creator},{" "}
+                  {licenseUrl(credit.license) ? (
+                    <a href={licenseUrl(credit.license)!} className="underline decoration-line underline-offset-2 hover:text-ink">
+                      {credit.license}
+                    </a>
+                  ) : (
+                    credit.license
+                  )}
                 </li>
               );
             })}
