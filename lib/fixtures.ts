@@ -24,28 +24,24 @@ export const DEMO_PROFILE: BeanProfile = {
         role: "the main impression",
         description:
           "Like a handful of ripe blueberries, sweet and a little tart. It hits on the first sip and is hard to miss.",
-        photo: "blueberry",
       },
       {
         name: "Strawberry jam",
         role: "the sweetness",
         description:
           "Cooked strawberries rather than fresh ones: jammy and rounded. It fills the middle of the sip as it cools.",
-        photo: "strawberry",
       },
       {
         name: "Jasmine",
         role: "mostly in the aroma",
         description:
           "A light, perfumed floral, like jasmine tea. You'll notice it more when you smell the cup than when you taste it.",
-        photo: "jasmine",
       },
       {
         name: "Dark chocolate",
         role: "in the finish",
         description:
           "Think 70% dark chocolate: a gentle cocoa bitterness after you swallow. Stronger if the shot runs a little long.",
-        photo: "dark-chocolate",
       },
     ],
     acidity: 4,

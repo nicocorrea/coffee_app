@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { NOTE_PHOTO_IDS } from "./tasting-notes";
 
 // The schema doubles as a structured-output format for Claude, so it avoids numeric
 // min/max constraints and optional fields. Machine limits are enforced by clampProfile.
+// The provider also caps the size of the grammar it compiles from the schema, and as of
+// October 2026 this schema is right at that cap: adding even one string field makes the
+// reformat fallback in claude.ts fail with "The compiled grammar is too large".
 
 export const ROAST_LEVELS = ["light", "medium-light", "medium", "medium-dark", "dark"] as const;
 export type RoastLevel = (typeof ROAST_LEVELS)[number];
@@ -65,7 +67,6 @@ export const BeanProfileSchema = z.object({
           description: z
             .string()
             .describe("Two short sentences in everyday food terms: what it is like, how strong, and when you notice it"),
-          photo: z.enum(NOTE_PHOTO_IDS).describe("The closest photo in the library; for a rare note pick its nearest family"),
         }),
       )
       .describe("3–5 tasting notes, the most noticeable first"),
