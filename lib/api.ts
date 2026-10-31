@@ -63,6 +63,19 @@ export async function requestBrew(query: string, signal?: AbortSignal): Promise<
   return { ok: true, result };
 }
 
+const brewing = new Map<string, Promise<BrewOutcome>>();
+
+/** requestBrew, but a search already being researched in this tab is joined instead of paid for again. */
+export function requestBrewOnce(query: string): Promise<BrewOutcome> {
+  const q = normalizeQuery(query);
+  let pending = brewing.get(q);
+  if (!pending) {
+    pending = requestBrew(query).finally(() => brewing.delete(q));
+    brewing.set(q, pending);
+  }
+  return pending;
+}
+
 /** Background research on one lot. Null on any failure: the journey just stays on what the profile says. */
 export async function requestJourney(result: BrewResult, signal?: AbortSignal): Promise<JourneyFacts | null> {
   const { bean } = result;

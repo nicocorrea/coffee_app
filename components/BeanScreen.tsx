@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { getAccessCode, getCachedResult, requestBrew, type BrewOutcome } from "@/lib/api";
+import { getAccessCode, getCachedResult, requestBrewOnce, type BrewOutcome } from "@/lib/api";
 import { favKey, useFavourites } from "@/lib/favourites";
 import { touchLookup } from "@/lib/history";
 import type { BrewResult } from "@/lib/schema";
@@ -74,7 +74,8 @@ function Lookup({ query, fresh, onRetry, onRefresh }: LookupProps) {
       return;
     }
     // Not aborted when hidden: the research is paid for either way, and its result is kept on the device.
-    pending.current ??= requestBrew(query);
+    // Shared by query, so a remount while it runs (Next can remount the page as a navigation starts) joins it.
+    pending.current ??= requestBrewOnce(query);
     let shown = true;
     pending.current.then((o) => {
       if (!shown) return;
