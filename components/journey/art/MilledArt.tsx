@@ -31,6 +31,26 @@ const DRY: Palette = {
   caption: "two green seeds, face to face",
 };
 
+// Washed and honey coffees reach the dry mill as parchment (the fruit came off before drying), so
+// their shell is the pale parchment itself, with a thin silverskin under it. Honey's parchment keeps
+// an amber tint of the dried, sticky fruit.
+const PARCHMENT: Palette = {
+  husk: ["#e3d0a0", "#d9c590"],
+  ridge: "#c4ad74",
+  parch: ["#f4ecd9", "#efe6d0"],
+  parchLine: "#dfd1b0",
+  beans: DRY.beans,
+  seam: DRY.seam,
+  gloss: DRY.gloss,
+  caption: DRY.caption,
+};
+
+const HONEY: Palette = {
+  ...PARCHMENT,
+  husk: ["#dcb66c", "#d2a95c"],
+  ridge: "#b98c45",
+};
+
 // Wet-hulled: the shell comes off still damp, and the seeds inside are darker and glossy.
 const WET: Palette = {
   husk: ["#7a6040", "#866a46"],
@@ -61,12 +81,18 @@ const PIECES: [number, number, number][] = [
   [270, 224, 14],
 ];
 
-/** Milled: the dry husk shakes and splits, flecks fly, the parchment puffs away and two green seeds part. */
+/**
+ * Milled: the shell shakes and splits, flecks fly, the inner skin puffs away and two green seeds part.
+ * The shell is the dried cherry's husk for naturals (and anaerobic or unknown processes), and the
+ * parchment itself for washed and honey coffees, whose fruit came off before drying.
+ */
 export function MilledArt({ j }: ArtProps) {
   const wet = j.milled.wetHulled;
-  const c = wet ? WET : DRY;
+  const process = j.processed.process;
+  const parchment = !wet && (process === "washed" || process === "honey");
+  const c = wet ? WET : parchment ? (process === "honey" ? HONEY : PARCHMENT) : DRY;
   return (
-    <g data-art="milled" data-variant={wet ? "wet-hulled" : "dry"}>
+    <g data-art="milled" data-variant={wet ? "wet-hulled" : "dry"} data-shell={parchment ? "parchment" : "husk"}>
       <defs>
         <radialGradient id="j-milled-bg" cx="50%" cy="48%" r="58%">
           <stop offset="0" stopColor="#f6ecdf" />

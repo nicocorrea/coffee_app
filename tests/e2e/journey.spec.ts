@@ -97,11 +97,15 @@ test("the processing scenes follow the process, the drying and the milling", asy
   const processed = page.locator('[data-art="processed"]');
   await expect(processed).toHaveAttribute("data-variant", "natural raised-beds");
   await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-variant", "dry");
+  await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-shell", "husk");
   await expect(page.locator('[data-art="sorted"]')).toHaveCount(1);
   expect(await page.locator('[data-art="sorted"]').getAttribute("data-variant")).toBeFalsy();
   await patch({ process: "Washed" });
   await page.reload();
   await expect(processed).toHaveAttribute("data-variant", "washed raised-beds");
+  // A washed coffee reaches the mill as parchment: its fruit came off before drying.
+  await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-variant", "dry");
+  await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-shell", "parchment");
   await patch({ origin: "Brazil", process: "Natural" });
   await page.reload();
   await expect(processed).toHaveAttribute("data-variant", "natural patio");
