@@ -37,6 +37,13 @@ describe("stage copy", () => {
     const w = buildJourney(brew({ process: "Wet-hulled", origin: "Indonesia", region: "Sumatra" }));
     expect(stageCopy(w, "milled").text).toMatch(/wet-hulled[^.]*(damp|moist)/i);
   });
+  it("hedges wet-hulled at low confidence", () => {
+    const w = buildJourney({ ...brew({ process: "Wet-hulled", origin: "Indonesia", region: "Sumatra" }), confidence: "low" });
+    const t = stageCopy(w, "milled").text;
+    expect(t).toMatch(/usually|typically|often/i);
+    expect(t).not.toContain("This coffee is wet-hulled");
+    expect(t).toMatch(/wet-hulled[^.]*(damp|moist)/i);
+  });
   it("uses only <b> markup and fills every stage", () => {
     for (const id of j.stages) {
       const c = stageCopy(j, id);

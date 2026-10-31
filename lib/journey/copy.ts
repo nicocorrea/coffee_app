@@ -210,8 +210,9 @@ function processed(j: Journey) {
 }
 
 function milled(j: Journey) {
+  const processOwn = isOwn(fact(j.processed.facts, "Process"));
   const text = j.milled.wetHulled
-    ? "This coffee is wet-hulled, which means the parchment, the thin papery skin around each bean, is usually stripped off while the bean is still damp, before it is fully dry. Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet."
+    ? `${processOwn ? "This coffee is wet-hulled" : "Coffee from here is often wet-hulled"}, which means the parchment, the thin papery skin around each bean, is usually stripped off while the bean is still damp, before it is fully dry. Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet.`
     : "Once dry, the hard husk and the parchment, a thin papery skin around each bean, are usually cracked off at a dry mill. Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet.";
   return {
     step: "",
