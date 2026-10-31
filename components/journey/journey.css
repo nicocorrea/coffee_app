@@ -182,6 +182,182 @@
   100% { opacity: 0; transform: translate(12px, -146px); }
 }
 
+/* Art: processed. Equipment drops what it processes (--dy) and chaff flies off (--tx/--ty); water
+   bubbles, gas escapes the sealed tank's valve, the pulper's crank turns; the drum dryer spins
+   (its slats run), tumbles what's inside and is heated by a flickering flame. */
+.j-processed-drop {
+  opacity: 0;
+}
+.is-active .j-processed-drop {
+  animation: j-processed-drop 0.9s cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0s) 2 both;
+}
+@keyframes j-processed-drop {
+  0% { opacity: 0; transform: none; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 22px)); }
+}
+.j-processed-chaff {
+  opacity: 0;
+}
+.is-active .j-processed-chaff {
+  animation: j-processed-chaff 1s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 0s) 2 both;
+}
+@keyframes j-processed-chaff {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(var(--tx, -20px), var(--ty, 10px)) rotate(200deg); }
+}
+.is-active .j-processed-bubble {
+  animation: j-processed-bubble 2.2s ease-in var(--d, 0s) infinite both;
+}
+@keyframes j-processed-bubble {
+  0% { opacity: 0; transform: none; }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+.is-active .j-processed-gas {
+  animation: j-processed-gas 1.8s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-processed-gas {
+  0% { opacity: 0; transform: none; }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(6px, -24px) scale(1.5); }
+}
+.is-active .j-processed-crank {
+  transform-origin: 50% 50%;
+  animation: j-processed-turn 1.4s linear var(--d, 0s) infinite;
+}
+@keyframes j-processed-turn {
+  to { transform: rotate(360deg); }
+}
+.is-active .j-processed-spin {
+  animation: j-processed-spin 0.9s linear infinite;
+}
+@keyframes j-processed-spin {
+  to { stroke-dashoffset: -28px; }
+}
+.is-active .j-processed-tumble {
+  transform-origin: 50% 50%;
+  animation: j-processed-tumble 1.8s ease-in-out infinite;
+}
+@keyframes j-processed-tumble {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(9deg); }
+}
+.is-active .j-processed-flame {
+  transform-origin: 50% 100%;
+  animation: j-processed-flame 0.35s ease-in-out infinite alternate;
+}
+@keyframes j-processed-flame {
+  from { transform: scale(1, 0.82); }
+  to { transform: scale(0.9, 1.08); }
+}
+.is-active .j-processed-heat {
+  animation: j-processed-heat 2.4s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-processed-heat {
+  0% { opacity: 0; transform: none; }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+
+/* Art: milled. The husk shakes and splits apart, flecks fly, the parchment puffs away and the two
+   green seeds part. */
+.is-active .j-milled-husk-l {
+  animation:
+    j-milled-shake 0.12s ease-in-out 0.6s 6,
+    j-milled-split-l 1s cubic-bezier(0.3, 0.7, 0.3, 1) 1.4s both;
+}
+.is-active .j-milled-husk-r {
+  animation:
+    j-milled-shake 0.12s ease-in-out 0.6s 6,
+    j-milled-split-r 1s cubic-bezier(0.3, 0.7, 0.3, 1) 1.4s both;
+}
+@keyframes j-milled-shake {
+  0%, 100% { transform: none; }
+  50% { transform: translateX(2px) rotate(1deg); }
+}
+@keyframes j-milled-split-l {
+  to { transform: translate(-110px, 40px) rotate(-38deg); opacity: 0; }
+}
+@keyframes j-milled-split-r {
+  to { transform: translate(110px, 40px) rotate(38deg); opacity: 0; }
+}
+.j-milled-parch {
+  transform-origin: 50% 50%;
+}
+.is-active .j-milled-parch {
+  animation: j-milled-parch 0.9s ease 2.1s both;
+}
+@keyframes j-milled-parch {
+  to { transform: scale(1.25); opacity: 0; }
+}
+.j-milled-bean-l,
+.j-milled-bean-r {
+  transform-origin: 50% 50%;
+}
+.is-active .j-milled-bean-l {
+  animation: j-milled-bean-l 1s cubic-bezier(0.3, 1.4, 0.5, 1) 2.7s both;
+}
+.is-active .j-milled-bean-r {
+  animation: j-milled-bean-r 1s cubic-bezier(0.3, 1.4, 0.5, 1) 2.7s both;
+}
+@keyframes j-milled-bean-l {
+  to { transform: translateX(-22px) rotate(-14deg); }
+}
+@keyframes j-milled-bean-r {
+  to { transform: translateX(22px) rotate(14deg); }
+}
+.j-milled-fleck {
+  opacity: 0;
+}
+.is-active .j-milled-fleck {
+  animation: j-milled-fleck 1.1s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 1.4s) both;
+}
+@keyframes j-milled-fleck {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(220deg); }
+}
+
+/* Art: sorted. Beans keep dropping into the sack; now and then a faulty one is flicked into the
+   "set aside" bowl (--tx/--ty); the stamp lands on the sack. */
+.j-sorted-drop {
+  opacity: 0;
+}
+.is-active .j-sorted-drop {
+  animation: j-sorted-drop 1.2s cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0s) infinite both;
+}
+@keyframes j-sorted-drop {
+  0% { opacity: 0; transform: none; }
+  12% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 56px)); }
+}
+.j-sorted-reject {
+  opacity: 0;
+}
+.is-active .j-sorted-reject {
+  animation: j-sorted-reject 1.9s cubic-bezier(0.4, 0, 0.6, 1) var(--d, 0s) infinite both;
+}
+@keyframes j-sorted-reject {
+  0% { opacity: 0; transform: none; }
+  10% { opacity: 1; }
+  32% { transform: translateY(26px); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--tx, 100px), var(--ty, 120px)) rotate(200deg); }
+}
+.j-sorted-stamp {
+  opacity: 0;
+  transform: scale(1.7) rotate(-14deg);
+  transform-origin: 50% 50%;
+}
+.is-active .j-sorted-stamp {
+  animation: j-sorted-stamp 0.5s cubic-bezier(0.5, 0, 0.6, 1.4) 2.2s both;
+}
+@keyframes j-sorted-stamp {
+  to { opacity: 1; transform: rotate(-6deg); }
+}
+
 /* Only the active stage moves: loops freeze off-screen. */
 .j-stage:not(.is-active) * {
   animation-play-state: paused;
@@ -243,7 +419,16 @@
   .j-bob,
   .j-cover-ripple,
   .j-picked-shake,
-  .j-picked-lift {
+  .j-picked-lift,
+  .j-processed-bubble,
+  .j-processed-gas,
+  .j-processed-crank,
+  .j-processed-spin,
+  .j-processed-tumble,
+  .j-processed-flame,
+  .j-processed-heat,
+  .j-sorted-drop,
+  .j-sorted-reject {
     animation: none !important;
   }
 }

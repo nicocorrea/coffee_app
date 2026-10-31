@@ -2,8 +2,11 @@ import type { ComponentType } from "react";
 import type { Journey, StageId } from "@/lib/journey/types";
 import { CoverArt } from "./CoverArt";
 import { GrownArt } from "./GrownArt";
+import { MilledArt } from "./MilledArt";
 import { PickedArt } from "./PickedArt";
 import { placeholderArt } from "./Placeholder";
+import { ProcessedArt } from "./ProcessedArt";
+import { SortedArt } from "./SortedArt";
 
 /**
  * The art contract (Tasks 10–12 replace the placeholders, one stage at a time):
@@ -29,9 +32,9 @@ export const ART: Record<StageId, ComponentType<ArtProps>> = {
   cover: CoverArt,
   grown: GrownArt,
   picked: PickedArt,
-  processed: placeholderArt("processed"),
-  milled: placeholderArt("milled"),
-  sorted: placeholderArt("sorted"),
+  processed: ProcessedArt,
+  milled: MilledArt,
+  sorted: SortedArt,
   shipped: placeholderArt("shipped"),
   roasted: placeholderArt("roasted"),
   rested: placeholderArt("rested"),

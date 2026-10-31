@@ -66,7 +66,7 @@ test("labels facts honestly", async ({ page }) => {
   const processed = page.getByRole("region", { name: /Dried whole/ });
   await expect(processed.locator('[data-provenance="own"]', { hasText: "Natural" })).toBeVisible();
   await expect(page.locator('[data-provenance="advice"]', { hasText: "10–21" })).toHaveCount(1);
-  await expect(page.locator('[data-art="processed"][data-placeholder]')).toHaveCount(1);
+  await expect(page.locator('[data-art="shipped"][data-placeholder]')).toHaveCount(1);
 });
 
 test("art adapts to the coffee", async ({ page }) => {
@@ -83,6 +83,32 @@ test("art adapts to the coffee", async ({ page }) => {
   await page.reload();
   await expect(page.locator('[data-art="grown"]')).toHaveAttribute("data-variant", "peak-1 sun");
   await expect(page.locator('[data-art="picked"]')).toHaveAttribute("data-variant", "machine");
+});
+
+test("the processing scenes follow the process, the drying and the milling", async ({ page }) => {
+  const patch = (bean: Record<string, string>) =>
+    page.evaluate((b) => {
+      const l = JSON.parse(localStorage.getItem("crema:lookups")!);
+      Object.assign(l[0].result.bean, b);
+      localStorage.setItem("crema:lookups", JSON.stringify(l));
+    }, bean);
+  await seed(page);
+  await page.goto("/journey?q=Guji");
+  const processed = page.locator('[data-art="processed"]');
+  await expect(processed).toHaveAttribute("data-variant", "natural raised-beds");
+  await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-variant", "dry");
+  await expect(page.locator('[data-art="sorted"]')).toHaveCount(1);
+  expect(await page.locator('[data-art="sorted"]').getAttribute("data-variant")).toBeFalsy();
+  await patch({ process: "Washed" });
+  await page.reload();
+  await expect(processed).toHaveAttribute("data-variant", "washed raised-beds");
+  await patch({ origin: "Brazil", process: "Natural" });
+  await page.reload();
+  await expect(processed).toHaveAttribute("data-variant", "natural patio");
+  await patch({ origin: "Indonesia", process: "Wet-hulled" });
+  await page.reload();
+  await expect(processed).toHaveAttribute("data-variant", "wet-hulled patio");
+  await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-variant", "wet-hulled");
 });
 
 test("compares processes without changing the coffee", async ({ page }) => {
