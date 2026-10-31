@@ -127,7 +127,9 @@ export function buildJourney(result: BrewResult): Journey {
   // Roasted
   const roastedFacts: Fact[] = [profile(identity, "Roast", ROAST[bean.roastLevel])];
   const roastedIn = [facts?.roasterCity, facts?.roasterCountry].filter((s): s is string => !!s?.trim()).join(", ");
-  if (roastedIn) roastedFacts.push(own("Roasted in", roastedIn));
+  // The roaster's location has no source of its own: it is this coffee's only when the research cites one.
+  const roasterUrl = safeSources(facts?.sources ?? [])[0]?.url;
+  if (roastedIn) roastedFacts.push(roasterUrl ? own("Roasted in", roastedIn, roasterUrl) : usual("Roasted in", roastedIn));
 
   // Rested and cup: Claude's advice for the Meraki, not facts about the lot.
   const restDays = result.tips.restDays;

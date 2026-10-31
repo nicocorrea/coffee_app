@@ -55,12 +55,19 @@ describe("buildJourney", () => {
     expect(prov(j.processed.facts, "Drying")).toBe("usual");
   });
 
-  it("the roaster's researched location is this coffee's", () =>
-    expect(buildJourney(withFacts({ roasterCity: "Kraków", roasterCountry: "Poland" })).roasted.facts).toContainEqual({
+  it("the roaster's location is this coffee's only when research cites a source", () => {
+    const sourced = buildJourney(
+      withFacts({ roasterCity: "Kraków", roasterCountry: "Poland", sources: ["not a url", "https://roaster.example/about"] }),
+    );
+    expect(sourced.roasted.facts).toContainEqual({
       label: "Roasted in",
       value: "Kraków, Poland",
       provenance: "own",
-    }));
+      sourceUrl: "https://roaster.example/about",
+    });
+    const unsourced = buildJourney(withFacts({ roasterCity: "Kraków", roasterCountry: "Poland", sources: ["javascript:alert(1)"] }));
+    expect(unsourced.roasted.facts).toContainEqual({ label: "Roasted in", value: "Kraków, Poland", provenance: "usual" });
+  });
 
   it("never invents a producer", () => expect(buildJourney(brew()).place.producer).toBeNull());
 
