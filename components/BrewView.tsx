@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { clampPreinfusion, type BrewResult } from "@/lib/schema";
+import { JourneyCard } from "./journey/JourneyCard";
+import { useJourneyEnrichment } from "@/lib/journey/enrich";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
 import { safeSources } from "@/lib/sources";
 import { BeanName } from "./BeanName";
@@ -34,7 +36,17 @@ const lookedUp = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
 /** `onRefresh` offers to research the coffee again instead of using what's stored on the device. */
-export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?: () => void }) {
+export function BrewView({
+  result,
+  onRefresh,
+  journeyHref,
+}: {
+  result: BrewResult;
+  onRefresh?: () => void;
+  journeyHref?: string;
+}) {
+  useJourneyEnrichment(result);
+  const journeyLink = journeyHref ?? `/journey?q=${encodeURIComponent(result.query)}`;
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
   const [stamps, setStamps] = useState(0); // bumps on each save so the bookmark stamps once
   const { bean, flavour, tips } = result;
@@ -155,6 +167,8 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
             </div>
           </Section>
 
+          <JourneyCard result={result} href={journeyLink} />
+
           <Section id="drinks" title="Every drink, dialled in">
             <p className="-mt-2 mb-5 text-muted">
               Built from your base recipe. A ★ marks where this coffee shines.
@@ -172,6 +186,9 @@ export function BrewView({ result, onRefresh }: { result: BrewResult; onRefresh?
                 </div>
               ))}
             </dl>
+            <Link href={journeyLink} className="mt-6 inline-flex min-h-11 items-center font-medium text-cascara underline decoration-line underline-offset-4 hover:text-ink">
+              Discover its journey
+            </Link>
           </Section>
 
           <Section id="dial-in" title="If the shot tastes off">

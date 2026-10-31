@@ -50,7 +50,7 @@ function SavedBean({ id }: { id: string }) {
   if (!result) {
     return <ErrorState title="Not saved on this device" message="This coffee isn’t in your saved list any more. Search for it again." />;
   }
-  return <BrewView result={result} />;
+  return <BrewView result={result} journeyHref={`/journey?saved=${encodeURIComponent(favKey(result))}`} />;
 }
 
 type LookupProps = { query: string; fresh: boolean; onRetry: () => void; onRefresh: () => void };
@@ -84,5 +84,5 @@ function Lookup({ query, fresh, onRetry, onRefresh }: LookupProps) {
     );
   }
   if (!state.result.identified) return <NotIdentified query={query} reason={state.result.reason} />;
-  return <BrewView result={state.result} onRefresh={onRefresh} />;
+  return <BrewView result={state.result} onRefresh={onRefresh} journeyHref={`/journey?q=${encodeURIComponent(query)}`} />;
 }

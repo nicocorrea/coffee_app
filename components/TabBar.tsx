@@ -30,6 +30,7 @@ const TABS = [
 
 export function TabBar() {
   const pathname = usePathname();
+  if (pathname.startsWith("/journey")) return null; // the journey is full-screen
   return (
     <nav
       aria-label="Main"
