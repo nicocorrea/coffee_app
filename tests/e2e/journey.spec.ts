@@ -129,6 +129,33 @@ test("with reduced motion every stage is already finished", async ({ page }) => 
   }
 });
 
+test("a stage replays when you come back to it and stops once it's off-screen", async ({ page }) => {
+  await seed(page);
+  await page.goto("/journey?q=Guji");
+  await expect(page.getByRole("heading", { name: "Guji Hambela Natural" })).toBeVisible();
+  const sections = page.locator("section[data-stage-index]");
+  const show = async (i: number) => {
+    await sections.nth(i).evaluate((s) => s.scrollIntoView({ block: "start" }));
+    await expect(sections.nth(i)).toHaveClass(/is-active/);
+  };
+  await show(2);
+  await expect(sections.nth(2)).toHaveAttribute("data-run", "1");
+  await show(4);
+  // Its neighbours sit exactly edge to edge with the screen: that counts as out of view.
+  await expect(sections.nth(2)).not.toHaveClass(/is-active/);
+  await expect(sections.nth(3)).not.toHaveClass(/is-active/);
+  await show(2);
+  await expect(sections.nth(2)).toHaveAttribute("data-run", "2");
+  await expect(sections.nth(4)).not.toHaveClass(/is-active/);
+  await expect(sections.nth(0)).not.toHaveClass(/is-active/);
+  // One screen at a time: the stage just left ends exactly at the screen's edge.
+  await show(3);
+  await expect(sections.nth(2)).not.toHaveClass(/is-active/);
+  await show(2);
+  await expect(sections.nth(2)).toHaveAttribute("data-run", "3");
+  await expect(sections.nth(3)).not.toHaveClass(/is-active/);
+});
+
 test.describe("desktop", () => {
   test.use({
     viewport: { width: 1440, height: 900 },

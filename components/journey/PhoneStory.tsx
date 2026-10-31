@@ -46,6 +46,7 @@ export function PhoneStory({ j, onClose, onEnter }: StoryProps) {
             <section
               key={id}
               data-stage-index={i}
+              data-run={runs[i] ?? 0}
               aria-labelledby={headingId(id)}
               className={`j-stage relative flex min-h-full snap-start flex-col ${on ? "is-active" : ""} ${dark ? "bg-[#2a1c15]" : ""}`}
             >

@@ -90,7 +90,8 @@ export function useActiveStage(
               start(i);
             }
             makeActive(i);
-          } else if (!e.isIntersecting) {
+          } else if (!e.isIntersecting || e.intersectionRatio === 0 || e.intersectionRect.height === 0) {
+            // A neighbour sitting exactly at the edge "intersects" with zero area: that is out of view too.
             inView[i] = false;
           }
         }
@@ -98,7 +99,9 @@ export function useActiveStage(
       },
       mode === "desktop"
         ? { root, rootMargin: "-50% 0px -50% 0px" }
-        : { root, threshold: [0, 0.3, 0.55, 0.8, 1] },
+        : // 0.001 makes the last visible sliver → edge-adjacent (ratio 0) step fire a callback;
+          // with only 0 as the lowest threshold, the spec treats both as the same band.
+          { root, threshold: [0, 0.001, 0.3, 0.55, 0.8, 1] },
     );
     els.forEach((el) => io.observe(el));
 
