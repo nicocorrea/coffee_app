@@ -69,6 +69,22 @@ test("labels facts honestly", async ({ page }) => {
   await expect(page.locator('[data-art="processed"][data-placeholder]')).toHaveCount(1);
 });
 
+test("art adapts to the coffee", async ({ page }) => {
+  await seed(page);
+  await page.goto("/journey?q=Guji");
+  await expect(page.locator('[data-art="cover"]')).toHaveAttribute("data-variant", "country");
+  await expect(page.locator('[data-art="grown"]')).toHaveAttribute("data-variant", "peak-4 forest");
+  await expect(page.locator('[data-art="picked"]')).toHaveAttribute("data-variant", "hand");
+  await page.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem("crema:lookups")!);
+    Object.assign(l[0].result.bean, { origin: "Brazil", altitude: "900 m", process: "Natural" });
+    localStorage.setItem("crema:lookups", JSON.stringify(l));
+  });
+  await page.reload();
+  await expect(page.locator('[data-art="grown"]')).toHaveAttribute("data-variant", "peak-1 sun");
+  await expect(page.locator('[data-art="picked"]')).toHaveAttribute("data-variant", "machine");
+});
+
 test("compares processes without changing the coffee", async ({ page }) => {
   await seed(page);
   await page.goto("/journey?q=Guji");

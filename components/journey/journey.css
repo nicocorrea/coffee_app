@@ -17,6 +17,11 @@
 .j-stage svg * {
   transform-box: fill-box;
 }
+/* A `transform` attribute keeps its plain SVG meaning (about the user-space origin), so an art can
+   rotate or scale a group in place. Such elements never carry a j- class (see above). */
+.j-stage svg [transform] {
+  transform-box: view-box;
+}
 
 /* Entrance: the "before" state. */
 .j-fade {
@@ -96,6 +101,87 @@
   50% { transform: translateY(-5px); }
 }
 
+/* Art: cover. The land fades in under its drawn outline; the pin drops, then ripples. */
+.j-cover-land {
+  fill-opacity: 0;
+}
+.is-active .j-cover-land {
+  animation: j-cover-land 1.2s ease 1.2s both;
+}
+@keyframes j-cover-land {
+  to { fill-opacity: 1; }
+}
+.j-cover-pin {
+  opacity: 0;
+  transform: translateY(-60px);
+}
+.is-active .j-cover-pin {
+  animation: j-cover-pin 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) var(--d, 1.6s) both;
+}
+@keyframes j-cover-pin {
+  to { opacity: 1; transform: none; }
+}
+.is-active .j-cover-ripple {
+  transform-origin: 50% 50%;
+  animation: j-cover-ripple 2.4s ease-out infinite;
+}
+@keyframes j-cover-ripple {
+  from { transform: scale(0.4); opacity: 0.8; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+/* Art: grown. The sun comes up from behind the range. */
+.j-grown-sun {
+  transform: translateY(130px);
+}
+.is-active .j-grown-sun {
+  animation: j-grown-sun 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+@keyframes j-grown-sun {
+  to { transform: none; }
+}
+
+/* Art: picked. By hand, cherries ripen green → yellow → red and the ripe ones fall (--dy) into the
+   basket; by machine, the shaker shivers and cherries ride the elevator up into the hopper. */
+.j-picked-ripen {
+  fill: #8fae5d;
+}
+.is-active .j-picked-ripen {
+  animation: j-picked-ripen 2.6s ease var(--d, 0s) both;
+}
+.is-active .j-picked-fall {
+  animation:
+    j-picked-ripen 2.6s ease var(--d, 0s) both,
+    j-picked-fall 0.75s cubic-bezier(0.55, 0, 0.9, 0.4) calc(var(--d, 0s) + 3s) both;
+}
+@keyframes j-picked-ripen {
+  0% { fill: #8fae5d; }
+  45% { fill: #e2b33c; }
+  100% { fill: #c0392b; }
+}
+@keyframes j-picked-fall {
+  to { transform: translateY(var(--dy, 0px)); }
+}
+.is-active .j-picked-shake {
+  animation: j-picked-shake 0.18s ease-in-out var(--d, 0s) infinite;
+}
+@keyframes j-picked-shake {
+  0%, 100% { transform: translateX(-1.4px); }
+  50% { transform: translateX(1.4px); }
+}
+.j-picked-lift {
+  opacity: 0;
+}
+.is-active .j-picked-lift {
+  animation: j-picked-lift 1.5s cubic-bezier(0.4, 0, 0.6, 1) var(--d, 0s) infinite;
+}
+@keyframes j-picked-lift {
+  0% { opacity: 0; transform: none; }
+  8% { opacity: 1; }
+  80% { opacity: 1; transform: translateY(-150px); }
+  100% { opacity: 0; transform: translate(12px, -146px); }
+}
+
 /* Only the active stage moves: loops freeze off-screen. */
 .j-stage:not(.is-active) * {
   animation-play-state: paused;
@@ -154,7 +240,10 @@
   }
   .j-sway,
   .j-drift,
-  .j-bob {
+  .j-bob,
+  .j-cover-ripple,
+  .j-picked-shake,
+  .j-picked-lift {
     animation: none !important;
   }
 }

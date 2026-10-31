@@ -1,5 +1,8 @@
 import type { ComponentType } from "react";
 import type { Journey, StageId } from "@/lib/journey/types";
+import { CoverArt } from "./CoverArt";
+import { GrownArt } from "./GrownArt";
+import { PickedArt } from "./PickedArt";
 import { placeholderArt } from "./Placeholder";
 
 /**
@@ -16,15 +19,16 @@ import { placeholderArt } from "./Placeholder";
  *   `motionVars`, loops `j-sway j-drift j-bob`), plus the art's own keyframes in journey.css gated by
  *   `.is-active` and ending with `forwards`/`both`, plus `useTween` for counters and colour ramps.
  *   Never put a j- class on an element that has a `transform` attribute; wrap it instead.
+ *   A `transform` attribute keeps its plain SVG meaning (rotate/scale about the user-space origin).
  * - Parallax layers are `<g data-depth="0.1">` (0–0.2). The desktop layout owns their `transform`.
  * - Use literal colours or the app's palette values; the dark re-theme does not reach the art.
  */
 export type ArtProps = { j: Journey; active: boolean };
 
 export const ART: Record<StageId, ComponentType<ArtProps>> = {
-  cover: placeholderArt("cover"),
-  grown: placeholderArt("grown"),
-  picked: placeholderArt("picked"),
+  cover: CoverArt,
+  grown: GrownArt,
+  picked: PickedArt,
   processed: placeholderArt("processed"),
   milled: placeholderArt("milled"),
   sorted: placeholderArt("sorted"),
