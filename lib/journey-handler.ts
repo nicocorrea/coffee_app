@@ -13,7 +13,7 @@ type Deps = { fetchFacts: (input: JourneyInput) => Promise<{ facts: JourneyFacts
 const error = (status: number, code: string, message: string): JourneyResponse => ({ status, body: { code, message } });
 
 const isText = (v: unknown): v is string => typeof v === "string" && v.length >= 1 && v.length <= 120;
-const isTextOrNull = (v: unknown): v is string | null => v === null || typeof v === "string";
+const isTextOrNull = (v: unknown): v is string | null => v === null || (typeof v === "string" && v.length <= 120);
 
 function parseInput(body: unknown): JourneyInput | null {
   const raw = body && typeof body === "object" ? (body as { input?: unknown }).input : undefined;
@@ -21,12 +21,12 @@ function parseInput(body: unknown): JourneyInput | null {
   const i = raw as Record<string, unknown>;
   const { sources } = i;
   if (!isText(i.name) || !isText(i.origin)) return null;
-  if (!Array.isArray(sources) || sources.length > 20 || !sources.every((s) => typeof s === "string")) return null;
+  if (!Array.isArray(sources) || sources.length > 20 || !sources.every((s) => typeof s === "string" && s.length <= 2048)) return null;
   const optional = [i.roaster ?? null, i.region ?? null, i.process ?? null, i.variety ?? null, i.altitude ?? null];
   if (!optional.every(isTextOrNull)) return null;
-  const [roaster, region, process, variety, altitude] = optional as (string | null)[];
+  const [roaster, region, processName, variety, altitude] = optional as (string | null)[];
   // JourneyInput.process is a plain string; a missing process is an empty one.
-  return { name: i.name, roaster, origin: i.origin, region, process: process ?? "", variety, altitude, sources };
+  return { name: i.name, roaster, origin: i.origin, region, process: processName ?? "", variety, altitude, sources };
 }
 
 export async function handleJourney(body: unknown, headers: Headers, env: Env, deps: Deps): Promise<JourneyResponse> {

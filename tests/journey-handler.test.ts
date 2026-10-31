@@ -35,6 +35,8 @@ describe("handleJourney", () => {
       { input: { ...input, sources: [1] } },
       { input: { ...input, sources: Array(21).fill("u") } },
       { input: { ...input, region: 3 } },
+      { input: { ...input, region: "x".repeat(121) } },
+      { input: { ...input, sources: ["x".repeat(2049)] } },
     ];
     for (const b of bad) {
       const res = await call(b);
