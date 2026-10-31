@@ -2,35 +2,9 @@
 
 import { lerp, motionVars, useTween } from "../motion";
 import type { ArtProps } from "./index";
+import { pillLook } from "./pills";
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
-
-// A pill colour for a tasting note, by what it names (else the next of a few house colours).
-const FLAVOURS: [RegExp, string][] = [
-  [/jasmin|flor|flower|blossom|bergamot|tea|honeysuckle|elder|lavender|rose|hibiscus/i, "#fbf8f5"],
-  [/blue|blackberr|blackcurrant|cassis|grape|plum|violet|fig/i, "#5b4a8a"],
-  [/straw|raspberr|cherr|red|cranberr|pomegranate|watermelon|currant/i, "#c0392b"],
-  [/choc|cocoa|cacao|molasses|tobacco/i, "#3a2015"],
-  [/lemon|lime|citrus|grapefruit|yuzu|lemongrass/i, "#e9cf5a"],
-  [/orange|mandarin|tangerine|apricot|peach|nectarine|mango|passion|tropical|papaya|pineapple/i, "#e08a3c"],
-  [/caramel|toffee|honey|sugar|maple|butterscotch|syrup|vanilla|brown/i, "#c08e57"],
-  [/nut|almond|hazel|pecan|walnut|praline|marzipan/i, "#a8835a"],
-  [/apple|pear|green|grass|herb|melon|kiwi/i, "#8c9873"],
-  [/wine|rum|whisk|boozy|liqueur/i, "#7a2a3a"],
-  [/spice|cinnamon|clove|pepper|cardamom|nutmeg|ginger/i, "#9a5a32"],
-];
-const HOUSE = ["#a84f3a", "#8c9873", "#c08e57", "#6e4128"];
-
-function luminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function pillLook(note: string, i: number) {
-  const fill = FLAVOURS.find(([re]) => re.test(note))?.[1] ?? HOUSE[i % HOUSE.length];
-  const light = luminance(fill) > 0.6;
-  return { fill, text: light ? "#2a1c15" : "#fff", stroke: light ? "#ded2c6" : "none" };
-}
 
 // Where the notes float, around the steam: [centre x, y, left edge, right edge]. The left pills keep
 // clear of the streams and the steam; the right ones of the portafilter's handle above them.
