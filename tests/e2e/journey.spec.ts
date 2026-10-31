@@ -66,7 +66,6 @@ test("labels facts honestly", async ({ page }) => {
   const processed = page.getByRole("region", { name: /Dried whole/ });
   await expect(processed.locator('[data-provenance="own"]', { hasText: "Natural" })).toBeVisible();
   await expect(page.locator('[data-provenance="advice"]', { hasText: "10–21" })).toHaveCount(1);
-  await expect(page.locator('[data-art="shipped"][data-placeholder]')).toHaveCount(1);
 });
 
 test("art adapts to the coffee", async ({ page }) => {
@@ -113,6 +112,60 @@ test("the processing scenes follow the process, the drying and the milling", asy
   await page.reload();
   await expect(processed).toHaveAttribute("data-variant", "wet-hulled patio");
   await expect(page.locator('[data-art="milled"]')).toHaveAttribute("data-variant", "wet-hulled");
+});
+
+test("the last scenes show the trip, the roast, the rest and the cup", async ({ page }) => {
+  await seed(page);
+  await page.goto("/journey?q=Guji");
+  await expect(page.locator('[data-art="shipped"]')).toHaveAttribute("data-variant", "sea");
+  await expect(page.locator('[data-art="roasted"]')).toHaveAttribute("data-variant", "light");
+  await expect(page.locator('[data-art="rested"]')).toHaveCount(1);
+  const cup = page.locator('[data-art="cup"]');
+  for (const note of ["Blueberry", "Strawberry jam", "Jasmine", "Dark chocolate"]) {
+    await expect(cup.locator("[data-note]", { hasText: note })).toHaveCount(1);
+  }
+  await expect(cup).toContainText("18 g in");
+  // Every stage has its real drawing now.
+  await expect(page.locator("[data-art]")).toHaveCount(10);
+  await expect(page.locator("[data-placeholder]")).toHaveCount(0);
+  await page.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem("crema:lookups")!);
+    l[0].result.bean.roastLevel = "dark";
+    localStorage.setItem("crema:lookups", JSON.stringify(l));
+  });
+  await page.reload();
+  await expect(page.locator('[data-art="roasted"]')).toHaveAttribute("data-variant", "dark");
+});
+
+test("a coffee roasted where it grew never ships", async ({ page }) => {
+  await seed(page);
+  await page.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem("crema:lookups")!);
+    l[0].result.journey = {
+      createdAt: new Date().toISOString(),
+      facts: {
+        roasterCity: null,
+        roasterCountry: "Ethiopia",
+        producer: null,
+        picking: null,
+        setting: null,
+        drying: null,
+        dryingDays: null,
+        fermentation: null,
+        grade: null,
+        harvestMonths: null,
+        special: null,
+        regionCoords: null,
+        sources: [],
+      },
+    };
+    localStorage.setItem("crema:lookups", JSON.stringify(l));
+  });
+  await page.goto("/journey?q=Guji");
+  await expect(page.locator('[data-art="cup"]')).toHaveCount(1);
+  await expect(page.locator('[data-art="shipped"]')).toHaveCount(0);
+  await expect(page.getByText("8 of 8 · In your cup")).toHaveCount(1);
+  await expect(page.locator("[data-placeholder]")).toHaveCount(0);
 });
 
 test("compares processes without changing the coffee", async ({ page }) => {

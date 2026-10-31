@@ -1,15 +1,18 @@
 import type { ComponentType } from "react";
 import type { Journey, StageId } from "@/lib/journey/types";
 import { CoverArt } from "./CoverArt";
+import { CupArt } from "./CupArt";
 import { GrownArt } from "./GrownArt";
 import { MilledArt } from "./MilledArt";
 import { PickedArt } from "./PickedArt";
-import { placeholderArt } from "./Placeholder";
 import { ProcessedArt } from "./ProcessedArt";
+import { RestedArt } from "./RestedArt";
+import { RoastedArt } from "./RoastedArt";
+import { ShippedArt } from "./ShippedArt";
 import { SortedArt } from "./SortedArt";
 
 /**
- * The art contract (Tasks 10–12 replace the placeholders, one stage at a time):
+ * The art contract (one drawing per stage):
  *
  * - An art renders only its root `<g data-art="{stageId}" data-variant="…">`. The layout supplies the
  *   `<svg viewBox="0 0 360 300" aria-hidden>` around it and the visually hidden `stageCopy(…).alt`
@@ -35,8 +38,8 @@ export const ART: Record<StageId, ComponentType<ArtProps>> = {
   processed: ProcessedArt,
   milled: MilledArt,
   sorted: SortedArt,
-  shipped: placeholderArt("shipped"),
-  roasted: placeholderArt("roasted"),
-  rested: placeholderArt("rested"),
-  cup: placeholderArt("cup"),
+  shipped: ShippedArt,
+  roasted: RoastedArt,
+  rested: RestedArt,
+  cup: CupArt,
 };

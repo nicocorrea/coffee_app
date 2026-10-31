@@ -358,6 +358,134 @@
   to { opacity: 1; transform: rotate(-6deg); }
 }
 
+/* Art: shipped. The swell slides by (each band at its own --dur), the ship rocks and drifts
+   along, and smoke puffs from its funnel. */
+.is-active .j-shipped-wave {
+  animation: j-shipped-wave var(--dur, 6s) linear infinite;
+}
+@keyframes j-shipped-wave {
+  to { transform: translateX(-360px); }
+}
+.is-active .j-shipped-bob {
+  transform-origin: 50% 100%;
+  animation: j-shipped-bob 3.4s ease-in-out infinite;
+}
+@keyframes j-shipped-bob {
+  0%, 100% { transform: rotate(-1.8deg); }
+  50% { transform: rotate(1.8deg) translateY(3px); }
+}
+.is-active .j-shipped-sail {
+  animation: j-shipped-sail 20s ease-in-out infinite;
+}
+@keyframes j-shipped-sail {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(36px); }
+  75% { transform: translateX(-36px); }
+}
+.j-shipped-puff {
+  opacity: 0;
+}
+.is-active .j-shipped-puff {
+  transform-origin: 50% 50%;
+  animation: j-shipped-puff 3s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-shipped-puff {
+  0% { opacity: 0.6; transform: scale(0.5); }
+  100% { opacity: 0; transform: translate(-30px, -34px) scale(1.8); }
+}
+
+/* Art: roasted. The drum spins over a flickering burner, its glow pulses, smoke leaves the
+   chimney, and the bean's "crack!" pops once the art adds .is-on. */
+.is-active .j-roasted-spin {
+  transform-origin: 50% 50%;
+  animation: j-roasted-spin 3.2s linear infinite;
+}
+@keyframes j-roasted-spin {
+  to { transform: rotate(360deg); }
+}
+.is-active .j-roasted-glow {
+  animation: j-roasted-glow 1.8s ease-in-out infinite alternate;
+}
+@keyframes j-roasted-glow {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+.is-active .j-roasted-flame {
+  transform-origin: 50% 100%;
+  animation: j-processed-flame 0.35s ease-in-out var(--d, 0s) infinite alternate;
+}
+.j-roasted-smoke {
+  opacity: 0;
+}
+.is-active .j-roasted-smoke {
+  transform-origin: 50% 50%;
+  animation: j-roasted-smoke 2.7s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-roasted-smoke {
+  0% { opacity: 0.7; transform: scale(0.5); }
+  100% { opacity: 0; transform: translate(14px, -24px) scale(1.7); }
+}
+.j-roasted-crack {
+  opacity: 0;
+  transform-origin: 50% 50%;
+}
+.is-active .j-roasted-crack.is-on {
+  animation: j-roasted-crack 0.9s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+@keyframes j-roasted-crack {
+  0% { opacity: 0; transform: scale(0.4); }
+  30% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Art: rested. Gas puffs out of the bag's valve. */
+.j-rested-gas {
+  opacity: 0;
+}
+.is-active .j-rested-gas {
+  transform-origin: 50% 50%;
+  animation: j-rested-gas 2.4s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-rested-gas {
+  0% { opacity: 0.7; transform: scale(0.4); }
+  100% { opacity: 0; transform: translate(16px, -46px) scale(1.6); }
+}
+
+/* Art: cup. Two streams pour and stop, the cup fills, and the steam rises. */
+.j-cup-stream {
+  transform: scaleY(0);
+  transform-origin: 50% 0%;
+}
+.is-active .j-cup-stream {
+  animation: j-cup-stream 4.6s ease 0.5s both;
+}
+@keyframes j-cup-stream {
+  0% { transform: scaleY(0); }
+  12% { transform: none; }
+  80% { transform: none; opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+.j-cup-fill {
+  transform: translateY(70px);
+}
+.is-active .j-cup-fill {
+  animation: j-cup-fill 3.6s cubic-bezier(0.4, 0.1, 0.4, 1) 0.9s both;
+}
+@keyframes j-cup-fill {
+  to { transform: none; }
+}
+.j-cup-steam {
+  opacity: 0;
+}
+.is-active .j-cup-steam {
+  animation: j-cup-steam 3.2s ease-in-out var(--d, 0s) infinite both;
+}
+@keyframes j-cup-steam {
+  0% { opacity: 0; transform: translateY(8px); }
+  40% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateY(-26px); }
+}
+
 /* Only the active stage moves: loops freeze off-screen. */
 .j-stage:not(.is-active) * {
   animation-play-state: paused;
@@ -428,7 +556,21 @@
   .j-processed-flame,
   .j-processed-heat,
   .j-sorted-drop,
-  .j-sorted-reject {
+  .j-sorted-reject,
+  .j-shipped-wave,
+  .j-shipped-bob,
+  .j-shipped-sail,
+  .j-shipped-puff,
+  .j-roasted-spin,
+  .j-roasted-glow,
+  .j-roasted-flame,
+  .j-roasted-smoke,
+  .j-rested-gas,
+  .j-cup-steam {
     animation: none !important;
+  }
+  /* The finished cup still steams, standing still. */
+  .j-cup-steam {
+    opacity: 0.45;
   }
 }
