@@ -55,10 +55,10 @@ const routingFor = (p: Provider): Routing =>
     ? { fallbacks: [{ model: OPENROUTER_FALLBACK_MODEL }] }
     : { betas: [FALLBACK_BETA], fallbacks: "default" };
 
-const searchToolFor = (p: Provider) =>
+const searchToolFor = (p: Provider, maxSearches: number) =>
   (p.name === "openrouter"
     ? { type: "openrouter:web_search", parameters: { max_results: 5 } }
-    : { type: "web_search_20260209", name: "web_search", max_uses: 4 }) as unknown as Anthropic.Beta.BetaToolUnion;
+    : { type: "web_search_20260209", name: "web_search", max_uses: maxSearches }) as unknown as Anthropic.Beta.BetaToolUnion;
 
 const JSON_SCHEMA = JSON.stringify(z.toJSONSchema(BeanProfileSchema));
 
@@ -166,18 +166,35 @@ const textOf = (content: Anthropic.Beta.BetaContentBlock[]) =>
     .map((b) => b.text)
     .join("");
 
-export async function fetchBeanProfile(
-  query: string,
-  provider: Provider,
-  client: Anthropic = new Anthropic({ apiKey: provider.apiKey, baseURL: provider.baseURL, maxRetries: 1 }),
-  { signal = AbortSignal.timeout(DEADLINE_MS) }: { signal?: AbortSignal } = {},
-): Promise<{ profile: BeanProfile; model: string }> {
+type CheckResult<T> = { value: T } | { problems: string };
+
+/**
+ * The shared research loop: web search with pause_turn continuations, refusal handling, JSON extraction,
+ * a schema check and up to MAX_REPAIRS repair calls, all inside one deadline.
+ */
+export async function researchJson<T>(opts: {
+  provider: Provider;
+  client: Anthropic;
+  signal: AbortSignal;
+  system: string;
+  user: string;
+  check: (json: unknown) => CheckResult<T>;
+  effort: "low" | "medium";
+  maxSearches: number;
+}): Promise<{ value: T; model: string }> {
+  const { provider, client, signal, system, user, effort, maxSearches } = opts;
   const { model } = provider;
   const routing = routingFor(provider);
-  const system = buildSystemPrompt();
-  const messages: Anthropic.Beta.BetaMessageParam[] = [
-    { role: "user", content: `Coffee to research: ${query}` },
-  ];
+  const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: "user", content: user }];
+  const check = (answer: string): CheckResult<T> => {
+    let json: unknown;
+    try {
+      json = extractJson(answer);
+    } catch {
+      return { problems: "- Your answer had no JSON object." };
+    }
+    return opts.check(json);
+  };
 
   try {
     let response: Anthropic.Beta.BetaMessage | undefined;
@@ -187,8 +204,8 @@ export async function fetchBeanProfile(
         max_tokens: 16000,
         system,
         messages,
-        output_config: { effort: "medium" },
-        tools: [searchToolFor(provider)],
+        output_config: { effort },
+        tools: [searchToolFor(provider, maxSearches)],
         ...routing,
       }, { signal });
       if (response.stop_reason !== "pause_turn") break;
@@ -200,11 +217,11 @@ export async function fetchBeanProfile(
     let answer = textOf(response.content);
     let result = check(answer);
     for (let i = 0; "problems" in result && i < MAX_REPAIRS; i++) {
-      answer = await repair(client, model, routing, query, answer, result.problems, signal);
+      answer = await repair(client, model, routing, system, user, answer, result.problems, signal);
       result = check(answer);
     }
     if ("problems" in result) throw new BrewError("bad_model_output", "The model returned an unexpected format");
-    return { profile: result.profile, model: response.model };
+    return { value: result.value, model: response.model };
   } catch (err) {
     if (err instanceof BrewError) throw err;
     if (signal.aborted) throw new BrewError("upstream", "The research took too long. Try again, or add the roaster's name.");
@@ -212,22 +229,37 @@ export async function fetchBeanProfile(
   }
 }
 
-/** A valid profile from Claude's answer, or why it isn't one, worded for Claude to fix. */
-function check(answer: string): { profile: BeanProfile } | { problems: string } {
-  let json: unknown;
-  try {
-    json = extractJson(answer);
-  } catch {
-    return { problems: "- Your answer had no JSON object." };
-  }
-  const parsed = BeanProfileSchema.safeParse(json);
-  if (parsed.success) return { profile: clampProfile(parsed.data) };
-  return {
-    problems: parsed.error.issues
-      .slice(0, 20)
-      .map((issue) => `- ${issue.path.join(".") || "(top level)"}: ${issue.message}`)
-      .join("\n"),
+/** A checker that validates parsed JSON against a schema, wording failures for Claude to fix. */
+export function checkWith<T>(schema: z.ZodType<T>, post: (v: T) => T = (v) => v) {
+  return (json: unknown): CheckResult<T> => {
+    const parsed = schema.safeParse(json);
+    if (parsed.success) return { value: post(parsed.data) };
+    return {
+      problems: parsed.error.issues
+        .slice(0, 20)
+        .map((issue) => `- ${issue.path.join(".") || "(top level)"}: ${issue.message}`)
+        .join("\n"),
+    };
   };
+}
+
+export async function fetchBeanProfile(
+  query: string,
+  provider: Provider,
+  client: Anthropic = new Anthropic({ apiKey: provider.apiKey, baseURL: provider.baseURL, maxRetries: 1 }),
+  { signal = AbortSignal.timeout(DEADLINE_MS) }: { signal?: AbortSignal } = {},
+): Promise<{ profile: BeanProfile; model: string }> {
+  const { value, model } = await researchJson({
+    provider,
+    client,
+    signal,
+    system: buildSystemPrompt(),
+    user: `Coffee to research: ${query}`,
+    check: checkWith(BeanProfileSchema, clampProfile),
+    effort: "medium",
+    maxSearches: 4,
+  });
+  return { profile: value, model };
 }
 
 /**
@@ -239,7 +271,8 @@ async function repair(
   client: Anthropic,
   model: string,
   routing: Routing,
-  query: string,
+  system: string,
+  user: string,
   answer: string,
   problems: string,
   signal: AbortSignal,
@@ -247,9 +280,9 @@ async function repair(
   const response = await client.beta.messages.create({
     model,
     max_tokens: 16000,
-    system: buildSystemPrompt(),
+    system,
     messages: [
-      { role: "user", content: `Coffee to research: ${query}` },
+      { role: "user", content: user },
       { role: "assistant", content: answer.trim() || "(no answer)" },
       {
         role: "user",

@@ -1,4 +1,5 @@
 import type { BeanProfile } from "./schema";
+import type { JourneyFacts } from "./journey/facts";
 
 /** Served by /api/brew when DEMO_MODE=1, so the UI works without an API key. */
 export const DEMO_PROFILE: BeanProfile = {
@@ -86,4 +87,23 @@ export const DEMO_PROFILE: BeanProfile = {
     { drink: "latte", note: "The fruit fades under 220 ml of milk — try a flat white instead." },
   ],
   sources: [],
+};
+
+const GUJI_SOURCE = "https://example.com/guji-hambela";
+
+/** Lot facts for DEMO_PROFILE's coffee, as the journey research would return them. */
+export const DEMO_JOURNEY_FACTS: JourneyFacts = {
+  roasterCity: "Kraków",
+  roasterCountry: "Poland",
+  producer: { name: "Smallholder farmers of Hambela Wamena", kind: "smallholders", source: GUJI_SOURCE },
+  picking: { value: "hand", source: GUJI_SOURCE },
+  setting: { value: "forest", source: GUJI_SOURCE },
+  drying: { value: "raised-beds", source: GUJI_SOURCE },
+  dryingDays: { value: { min: 18, max: 24 }, source: GUJI_SOURCE },
+  fermentation: null,
+  grade: null,
+  harvestMonths: null,
+  special: { value: "Grown in forest gardens above 2,000 m.", source: GUJI_SOURCE },
+  regionCoords: { lat: 6.0, lon: 38.7 },
+  sources: [GUJI_SOURCE],
 };

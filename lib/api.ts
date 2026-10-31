@@ -2,6 +2,8 @@
 
 import { getFavourites, refreshFavourite } from "./favourites";
 import { findLookup, normalizeQuery, rememberLookup } from "./history";
+import type { JourneyFacts } from "./journey/facts";
+import type { JourneyInput } from "./journey/research";
 import type { BrewResult } from "./schema";
 
 const ACCESS_KEY = "crema:access";
@@ -59,4 +61,45 @@ export async function requestBrew(query: string, signal?: AbortSignal): Promise<
     refreshFavourite(result);
   }
   return { ok: true, result };
+}
+
+const brewing = new Map<string, Promise<BrewOutcome>>();
+
+/** requestBrew, but a search already being researched in this tab is joined instead of paid for again. */
+export function requestBrewOnce(query: string): Promise<BrewOutcome> {
+  const q = normalizeQuery(query);
+  let pending = brewing.get(q);
+  if (!pending) {
+    pending = requestBrew(query).finally(() => brewing.delete(q));
+    brewing.set(q, pending);
+  }
+  return pending;
+}
+
+/** Background research on one lot. Null on any failure: the journey just stays on what the profile says. */
+export async function requestJourney(result: BrewResult, signal?: AbortSignal): Promise<JourneyFacts | null> {
+  const { bean } = result;
+  const input: JourneyInput = {
+    name: bean.name,
+    roaster: bean.roaster,
+    origin: bean.origin,
+    region: bean.region,
+    process: bean.process,
+    variety: bean.variety,
+    altitude: bean.altitude,
+    sources: result.sources.slice(0, 20),
+  };
+  try {
+    const res = await fetch("/api/journey", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-access-code": getAccessCode() },
+      body: JSON.stringify({ input }),
+      signal,
+    });
+    if (!res.ok) return null;
+    const body = await res.json().catch(() => null);
+    return body && typeof body === "object" && body.facts ? (body.facts as JourneyFacts) : null;
+  } catch {
+    return null;
+  }
 }

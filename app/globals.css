@@ -8,6 +8,8 @@
   --color-line: #ded2c6;
   --color-ink: #2a1c15;
   --color-muted: #7a675b;
+  /* Muted text dark enough to read at 4.5:1 on surface-2 (muted itself only reaches 4.1:1 there). */
+  --color-muted-strong: #6f5d52;
   --color-cascara: #a84f3a;
   --color-sage: #8c9873;
 

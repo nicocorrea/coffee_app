@@ -1,0 +1,577 @@
+/*
+ * The journey's motion system, ported from the approved prototypes.
+ *
+ * Every stage (a phone section, a desktop chapter, a desktop art frame) is a `.j-stage`. The layout
+ * adds `.is-active` while that stage plays. Entrance classes start in their "before" state and only
+ * animate under an `.is-active` ancestor; per-element timing comes from CSS variables:
+ *   --d    delay before the entrance starts (e.g. "0.4s"), default 0s
+ *   --len  path length for j-draw, in user units (a plain number)
+ *   --dur  duration for j-draw, default 1.8s
+ * Use `motionVars()` from motion.ts to set them. Prefixed `j-` because Tailwind owns `grow` and
+ * globals.css already has `rise` and `stamp` keyframes.
+ *
+ * Arts must not put a j- class on an element that also has a `transform` attribute (CSS transforms
+ * replace it): wrap it, `<g transform="translate(…)"><g className="j-grow">…</g></g>`.
+ */
+
+.j-stage svg * {
+  transform-box: fill-box;
+}
+/* A `transform` attribute keeps its plain SVG meaning (about the user-space origin), so an art can
+   rotate or scale a group in place. Such elements never carry a j- class (see above). */
+.j-stage svg [transform] {
+  transform-box: view-box;
+}
+
+/* Entrance: the "before" state. */
+.j-fade {
+  opacity: 0;
+}
+.j-rise {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.j-grow {
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+}
+.j-pop {
+  transform: scale(0);
+  transform-origin: 50% 50%;
+}
+.j-draw {
+  stroke-dasharray: calc(var(--len, 0) * 1px);
+  stroke-dashoffset: calc(var(--len, 0) * 1px);
+}
+
+/* Entrance: play under an active stage. */
+.is-active .j-fade {
+  animation: j-fade-in 0.9s ease var(--d, 0s) both;
+}
+.is-active .j-rise {
+  animation: j-rise-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) both;
+}
+.is-active .j-grow {
+  animation: j-grow-up 1.1s cubic-bezier(0.2, 0.9, 0.3, 1.15) var(--d, 0s) both;
+}
+.is-active .j-pop {
+  animation: j-pop-in 0.65s cubic-bezier(0.3, 1.6, 0.5, 1) var(--d, 0s) both;
+}
+.is-active .j-draw {
+  animation: j-draw-in var(--dur, 1.8s) cubic-bezier(0.5, 0, 0.2, 1) var(--d, 0s) both;
+}
+
+@keyframes j-fade-in {
+  to { opacity: 1; }
+}
+@keyframes j-rise-in {
+  to { opacity: 1; transform: none; }
+}
+@keyframes j-grow-up {
+  to { transform: none; }
+}
+@keyframes j-pop-in {
+  to { transform: none; }
+}
+@keyframes j-draw-in {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Loops: ambient motion, running whenever the stage is active. */
+.j-sway {
+  transform-origin: 50% 100%;
+  animation: j-sway 4.5s ease-in-out infinite;
+}
+.j-drift {
+  animation: j-drift 14s ease-in-out infinite alternate;
+}
+.j-bob {
+  animation: j-bob 3s ease-in-out infinite;
+}
+@keyframes j-sway {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.6deg); }
+}
+@keyframes j-drift {
+  from { transform: translateX(-24px); }
+  to { transform: translateX(28px); }
+}
+@keyframes j-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Art: cover. The land fades in under its drawn outline; the pin drops, then ripples. */
+.j-cover-land {
+  fill-opacity: 0;
+}
+.is-active .j-cover-land {
+  animation: j-cover-land 1.2s ease 1.2s both;
+}
+@keyframes j-cover-land {
+  to { fill-opacity: 1; }
+}
+.j-cover-pin {
+  opacity: 0;
+  transform: translateY(-60px);
+}
+.is-active .j-cover-pin {
+  animation: j-cover-pin 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) var(--d, 1.6s) both;
+}
+@keyframes j-cover-pin {
+  to { opacity: 1; transform: none; }
+}
+.is-active .j-cover-ripple {
+  transform-origin: 50% 50%;
+  animation: j-cover-ripple 2.4s ease-out infinite;
+}
+@keyframes j-cover-ripple {
+  from { transform: scale(0.4); opacity: 0.8; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+/* Art: grown. The sun comes up from behind the range. */
+.j-grown-sun {
+  transform: translateY(130px);
+}
+.is-active .j-grown-sun {
+  animation: j-grown-sun 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+@keyframes j-grown-sun {
+  to { transform: none; }
+}
+
+/* Art: picked. By hand, cherries ripen green → yellow → red and the ripe ones fall (--dy) into the
+   basket; by machine, the shaker shivers and cherries ride the elevator up into the hopper. */
+.j-picked-ripen {
+  fill: #8fae5d;
+}
+.is-active .j-picked-ripen {
+  animation: j-picked-ripen 2.6s ease var(--d, 0s) both;
+}
+.is-active .j-picked-fall {
+  animation:
+    j-picked-ripen 2.6s ease var(--d, 0s) both,
+    j-picked-fall 0.75s cubic-bezier(0.55, 0, 0.9, 0.4) calc(var(--d, 0s) + 3s) both;
+}
+@keyframes j-picked-ripen {
+  0% { fill: #8fae5d; }
+  45% { fill: #e2b33c; }
+  100% { fill: #c0392b; }
+}
+@keyframes j-picked-fall {
+  to { transform: translateY(var(--dy, 0px)); }
+}
+.is-active .j-picked-shake {
+  animation: j-picked-shake 0.18s ease-in-out var(--d, 0s) infinite;
+}
+@keyframes j-picked-shake {
+  0%, 100% { transform: translateX(-1.4px); }
+  50% { transform: translateX(1.4px); }
+}
+.j-picked-lift {
+  opacity: 0;
+}
+.is-active .j-picked-lift {
+  animation: j-picked-lift 1.5s cubic-bezier(0.4, 0, 0.6, 1) var(--d, 0s) infinite;
+}
+@keyframes j-picked-lift {
+  0% { opacity: 0; transform: none; }
+  8% { opacity: 1; }
+  80% { opacity: 1; transform: translateY(-150px); }
+  100% { opacity: 0; transform: translate(12px, -146px); }
+}
+
+/* Art: processed. Equipment drops what it processes (--dy) and chaff flies off (--tx/--ty); water
+   bubbles, gas escapes the sealed tank's valve, the pulper's crank turns; the drum dryer spins
+   (its slats run), tumbles what's inside and is heated by a flickering flame. */
+.j-processed-drop {
+  opacity: 0;
+}
+.is-active .j-processed-drop {
+  animation: j-processed-drop 0.9s cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0s) 2 both;
+}
+@keyframes j-processed-drop {
+  0% { opacity: 0; transform: none; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 22px)); }
+}
+.j-processed-chaff {
+  opacity: 0;
+}
+.is-active .j-processed-chaff {
+  animation: j-processed-chaff 1s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 0s) 2 both;
+}
+@keyframes j-processed-chaff {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(var(--tx, -20px), var(--ty, 10px)) rotate(200deg); }
+}
+.is-active .j-processed-bubble {
+  animation: j-processed-bubble 2.2s ease-in var(--d, 0s) infinite both;
+}
+@keyframes j-processed-bubble {
+  0% { opacity: 0; transform: none; }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+.is-active .j-processed-gas {
+  animation: j-processed-gas 1.8s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-processed-gas {
+  0% { opacity: 0; transform: none; }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(6px, -24px) scale(1.5); }
+}
+.is-active .j-processed-crank {
+  transform-origin: 50% 50%;
+  animation: j-processed-turn 1.4s linear var(--d, 0s) infinite;
+}
+@keyframes j-processed-turn {
+  to { transform: rotate(360deg); }
+}
+.is-active .j-processed-spin {
+  animation: j-processed-spin 0.9s linear infinite;
+}
+@keyframes j-processed-spin {
+  to { stroke-dashoffset: -28px; }
+}
+.is-active .j-processed-tumble {
+  transform-origin: 50% 50%;
+  animation: j-processed-tumble 1.8s ease-in-out infinite;
+}
+@keyframes j-processed-tumble {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(9deg); }
+}
+.is-active .j-processed-flame {
+  transform-origin: 50% 100%;
+  animation: j-processed-flame 0.35s ease-in-out infinite alternate;
+}
+@keyframes j-processed-flame {
+  from { transform: scale(1, 0.82); }
+  to { transform: scale(0.9, 1.08); }
+}
+.is-active .j-processed-heat {
+  animation: j-processed-heat 2.4s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-processed-heat {
+  0% { opacity: 0; transform: none; }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+
+/* Art: milled. The husk shakes and splits apart, flecks fly, the parchment puffs away and the two
+   green seeds part. */
+.is-active .j-milled-husk-l {
+  animation:
+    j-milled-shake 0.12s ease-in-out 0.6s 6,
+    j-milled-split-l 1s cubic-bezier(0.3, 0.7, 0.3, 1) 1.4s both;
+}
+.is-active .j-milled-husk-r {
+  animation:
+    j-milled-shake 0.12s ease-in-out 0.6s 6,
+    j-milled-split-r 1s cubic-bezier(0.3, 0.7, 0.3, 1) 1.4s both;
+}
+@keyframes j-milled-shake {
+  0%, 100% { transform: none; }
+  50% { transform: translateX(2px) rotate(1deg); }
+}
+@keyframes j-milled-split-l {
+  to { transform: translate(-110px, 40px) rotate(-38deg); opacity: 0; }
+}
+@keyframes j-milled-split-r {
+  to { transform: translate(110px, 40px) rotate(38deg); opacity: 0; }
+}
+.j-milled-parch {
+  transform-origin: 50% 50%;
+}
+.is-active .j-milled-parch {
+  animation: j-milled-parch 0.9s ease 2.1s both;
+}
+@keyframes j-milled-parch {
+  to { transform: scale(1.25); opacity: 0; }
+}
+.j-milled-bean-l,
+.j-milled-bean-r {
+  transform-origin: 50% 50%;
+}
+.is-active .j-milled-bean-l {
+  animation: j-milled-bean-l 1s cubic-bezier(0.3, 1.4, 0.5, 1) 2.7s both;
+}
+.is-active .j-milled-bean-r {
+  animation: j-milled-bean-r 1s cubic-bezier(0.3, 1.4, 0.5, 1) 2.7s both;
+}
+@keyframes j-milled-bean-l {
+  to { transform: translateX(-22px) rotate(-14deg); }
+}
+@keyframes j-milled-bean-r {
+  to { transform: translateX(22px) rotate(14deg); }
+}
+.j-milled-fleck {
+  opacity: 0;
+}
+.is-active .j-milled-fleck {
+  animation: j-milled-fleck 1.1s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 1.4s) both;
+}
+@keyframes j-milled-fleck {
+  0% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(220deg); }
+}
+
+/* Art: sorted. Beans keep dropping into the sack; now and then a faulty one is flicked into the
+   "set aside" bowl (--tx/--ty); the stamp lands on the sack. */
+.j-sorted-drop {
+  opacity: 0;
+}
+.is-active .j-sorted-drop {
+  animation: j-sorted-drop 1.2s cubic-bezier(0.5, 0, 0.9, 0.6) var(--d, 0s) infinite both;
+}
+@keyframes j-sorted-drop {
+  0% { opacity: 0; transform: none; }
+  12% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 56px)); }
+}
+.j-sorted-reject {
+  opacity: 0;
+}
+.is-active .j-sorted-reject {
+  animation: j-sorted-reject 1.9s cubic-bezier(0.4, 0, 0.6, 1) var(--d, 0s) infinite both;
+}
+@keyframes j-sorted-reject {
+  0% { opacity: 0; transform: none; }
+  10% { opacity: 1; }
+  32% { transform: translateY(26px); }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--tx, 100px), var(--ty, 120px)) rotate(200deg); }
+}
+.j-sorted-stamp {
+  opacity: 0;
+  transform: scale(1.7) rotate(-14deg);
+  transform-origin: 50% 50%;
+}
+.is-active .j-sorted-stamp {
+  animation: j-sorted-stamp 0.5s cubic-bezier(0.5, 0, 0.6, 1.4) 2.2s both;
+}
+@keyframes j-sorted-stamp {
+  to { opacity: 1; transform: rotate(-6deg); }
+}
+
+/* Art: shipped. The swell slides by (each band at its own --dur), the ship rocks and drifts
+   along, and smoke puffs from its funnel. */
+.is-active .j-shipped-wave {
+  animation: j-shipped-wave var(--dur, 6s) linear infinite;
+}
+@keyframes j-shipped-wave {
+  to { transform: translateX(-360px); }
+}
+.is-active .j-shipped-bob {
+  transform-origin: 50% 100%;
+  animation: j-shipped-bob 3.4s ease-in-out infinite;
+}
+@keyframes j-shipped-bob {
+  0%, 100% { transform: rotate(-1.8deg); }
+  50% { transform: rotate(1.8deg) translateY(3px); }
+}
+.is-active .j-shipped-sail {
+  animation: j-shipped-sail 20s ease-in-out infinite;
+}
+@keyframes j-shipped-sail {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(36px); }
+  75% { transform: translateX(-36px); }
+}
+.j-shipped-puff {
+  opacity: 0;
+}
+.is-active .j-shipped-puff {
+  transform-origin: 50% 50%;
+  animation: j-shipped-puff 3s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-shipped-puff {
+  0% { opacity: 0.6; transform: scale(0.5); }
+  100% { opacity: 0; transform: translate(-30px, -34px) scale(1.8); }
+}
+
+/* Art: roasted. The drum spins over a flickering burner, its glow pulses, smoke leaves the
+   chimney, and the bean's "crack!" pops once the art adds .is-on. */
+.is-active .j-roasted-spin {
+  transform-origin: 50% 50%;
+  animation: j-roasted-spin 3.2s linear infinite;
+}
+@keyframes j-roasted-spin {
+  to { transform: rotate(360deg); }
+}
+.is-active .j-roasted-glow {
+  animation: j-roasted-glow 1.8s ease-in-out infinite alternate;
+}
+@keyframes j-roasted-glow {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+.is-active .j-roasted-flame {
+  transform-origin: 50% 100%;
+  animation: j-processed-flame 0.35s ease-in-out var(--d, 0s) infinite alternate;
+}
+.j-roasted-smoke {
+  opacity: 0;
+}
+.is-active .j-roasted-smoke {
+  transform-origin: 50% 50%;
+  animation: j-roasted-smoke 2.7s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-roasted-smoke {
+  0% { opacity: 0.7; transform: scale(0.5); }
+  100% { opacity: 0; transform: translate(14px, -24px) scale(1.7); }
+}
+.j-roasted-crack {
+  opacity: 0;
+  transform-origin: 50% 50%;
+}
+.is-active .j-roasted-crack.is-on {
+  animation: j-roasted-crack 0.9s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+@keyframes j-roasted-crack {
+  0% { opacity: 0; transform: scale(0.4); }
+  30% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Art: rested. Gas puffs out of the bag's valve. */
+.j-rested-gas {
+  opacity: 0;
+}
+.is-active .j-rested-gas {
+  transform-origin: 50% 50%;
+  animation: j-rested-gas 2.4s ease-out var(--d, 0s) infinite both;
+}
+@keyframes j-rested-gas {
+  0% { opacity: 0.7; transform: scale(0.4); }
+  100% { opacity: 0; transform: translate(16px, -46px) scale(1.6); }
+}
+
+/* Art: cup. Two streams pour and stop, the cup fills, and the steam rises. */
+.j-cup-stream {
+  transform: scaleY(0);
+  transform-origin: 50% 0%;
+}
+.is-active .j-cup-stream {
+  animation: j-cup-stream 4.6s ease 0.5s both;
+}
+@keyframes j-cup-stream {
+  0% { transform: scaleY(0); }
+  12% { transform: none; }
+  80% { transform: none; opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+.j-cup-fill {
+  transform: translateY(70px);
+}
+.is-active .j-cup-fill {
+  animation: j-cup-fill 3.6s cubic-bezier(0.4, 0.1, 0.4, 1) 0.9s both;
+}
+@keyframes j-cup-fill {
+  to { transform: none; }
+}
+.j-cup-steam {
+  opacity: 0;
+}
+.is-active .j-cup-steam {
+  animation: j-cup-steam 3.2s ease-in-out var(--d, 0s) infinite both;
+}
+@keyframes j-cup-steam {
+  0% { opacity: 0; transform: translateY(8px); }
+  40% { opacity: 0.55; }
+  100% { opacity: 0; transform: translateY(-26px); }
+}
+
+/* Only the active stage moves: loops freeze off-screen. */
+.j-stage:not(.is-active) * {
+  animation-play-state: paused;
+}
+
+/* The compare chips swap the paragraph with a short fade. */
+.j-swap {
+  animation: j-fade-in 0.25s ease both;
+}
+
+/* Desktop: the pinned art cross-fades to the active stage. */
+.j-frame {
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.8s ease, transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.j-frame.is-on {
+  opacity: 1;
+  transform: none;
+}
+.j-frame [data-depth] {
+  transition: transform 0.4s ease-out;
+}
+
+/* Dark stages (cover, roasted) and the desktop night background re-theme the copy and chrome. */
+.j-dark {
+  --color-paper: #2a1c15;
+  --color-ink: #fbf8f5;
+  --color-muted: #cbb9a8;
+  --color-muted-strong: #cbb9a8;
+  --color-line: #4a3328;
+  --color-surface-2: rgb(251 248 245 / 0.12);
+  color: var(--color-ink);
+}
+
+.j-story {
+  scroll-snap-type: y proximity;
+  scrollbar-width: none;
+}
+.j-story::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Reduced motion: the layout marks every stage active, so each animation applies; here they all
+ * jump straight to their last frame (no delay, no duration, one pass). Loops are switched off.
+ * An art's own keyframes get the same treatment, so they must end in their finished state
+ * (`forwards` or `both`).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .j-stage,
+  .j-stage * {
+    animation-delay: 0s !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .j-sway,
+  .j-drift,
+  .j-bob,
+  .j-cover-ripple,
+  .j-picked-shake,
+  .j-picked-lift,
+  .j-processed-bubble,
+  .j-processed-gas,
+  .j-processed-crank,
+  .j-processed-spin,
+  .j-processed-tumble,
+  .j-processed-flame,
+  .j-processed-heat,
+  .j-sorted-drop,
+  .j-sorted-reject,
+  .j-shipped-wave,
+  .j-shipped-bob,
+  .j-shipped-sail,
+  .j-shipped-puff,
+  .j-roasted-spin,
+  .j-roasted-glow,
+  .j-roasted-flame,
+  .j-roasted-smoke,
+  .j-rested-gas,
+  .j-cup-steam {
+    animation: none !important;
+  }
+  /* The finished cup still steams, standing still. */
+  .j-cup-steam {
+    opacity: 0.45;
+  }
+}

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { StoredJourney } from "@/lib/journey/facts";
 
 // Claude sees this schema as JSON Schema in its prompt, and its answer is validated against it.
 // It avoids numeric min/max constraints and optional fields: machine limits are enforced by
@@ -117,6 +118,7 @@ export type BrewResult = BeanProfile & {
   drinks: DrinkRecipe[];
   createdAt: string;
   model: string;
+  journey?: StoredJourney;
 };
 
 export const LIMITS = {
