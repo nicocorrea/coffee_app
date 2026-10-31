@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildJourney, mergeUnvisited, shouldEnrich } from "@/lib/journey/build";
+import { stageCopy } from "@/lib/journey/copy";
 import type { Fact } from "@/lib/journey/types";
 import { brew, withFacts } from "./journey-helpers";
 
@@ -71,6 +72,19 @@ describe("buildJourney", () => {
 
   it("never invents a producer", () => expect(buildJourney(brew()).place.producer).toBeNull());
 
+  it("a researched producer keeps its kind", () => {
+    const j = buildJourney(withFacts({ producer: { name: "Daye Bensa", kind: "washing station", source: "https://x.example" } }));
+    expect(j.place.producer).toMatchObject({ label: "Producer", value: "Daye Bensa", provenance: "own", kind: "washing station" });
+    expect(j.grown.producer).toEqual(j.place.producer);
+  });
+
+  it("a coffee with no process text claims none", () => {
+    const j = buildJourney(brew({ process: "" }));
+    expect(j.processed.process).toBe("other");
+    expect(j.processed.facts.filter((f) => f.provenance === "own")).toEqual([]);
+    expect(prov(j.processed.facts, "Process")).toBeUndefined();
+  });
+
   it("skips shipping when roasted in the origin country", () =>
     expect(buildJourney(withFacts({ roasterCountry: "Ethiopia" })).stages).not.toContain("shipped"));
 
@@ -135,5 +149,15 @@ describe("mergeUnvisited", () => {
     expect(m.place).toEqual(prev.place);
     expect(m.picked).toEqual(next.picked);
     expect(m.stages).toEqual(prev.stages);
+  });
+
+  it("a producer found after the cover was read still reaches the unread Grown stage", () => {
+    const prev = buildJourney(brew({ roaster: "R" }));
+    const next = buildJourney(
+      withFacts({ producer: { name: "Hambela smallholders", kind: "smallholders", source: "https://x.example" } }),
+    );
+    const m = mergeUnvisited(prev, next, new Set(["cover"]));
+    expect(m.place.producer).toBeNull();
+    expect(stageCopy(m, "grown").text).toContain("Hambela smallholders");
   });
 });

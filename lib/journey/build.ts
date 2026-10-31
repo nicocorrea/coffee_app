@@ -5,7 +5,7 @@ import { DRYING_DAYS, EUROPE_PORTS, GENERIC, countriesIn, countryFor } from "./c
 import type { JourneyFacts } from "./facts";
 import { parseAltitude, peakStep, processKind } from "./parse";
 import { STAGE_IDS } from "./types";
-import type { Drying, Fact, Journey, PickMethod, Provenance, Range, Setting, StageId } from "./types";
+import type { Drying, Fact, Journey, PickMethod, Producer, Provenance, Range, Setting, StageId } from "./types";
 
 // Provenance rule (spec, "Which badge a fact gets"):
 // - profile identity fields are "own" only at high confidence; at medium only country and process are;
@@ -59,7 +59,8 @@ export function buildJourney(result: BrewResult): Journey {
 
   // Place (cover)
   const named = sourced(facts?.producer ? { value: facts.producer.name, source: facts.producer.source } : null);
-  const producer = named ? own("Producer", named.value, named.url) : null;
+  const producer: Producer | null =
+    named && facts?.producer ? { ...own("Producer", named.value, named.url), kind: facts.producer.kind } : null;
   const countryValue = countries.length > 0 ? countries.map((c) => c.name).join(", ") : bean.origin;
   const placeFacts: Fact[] = [profile(onBag, "Country", countryValue)];
   if (region) placeFacts.push(profile(identity, "Region", region));
@@ -85,13 +86,15 @@ export function buildJourney(result: BrewResult): Journey {
 
   // Processed
   const process = processKind(bean.process, first?.key);
-  const processLabel = bean.process.trim() || "Other";
+  const processText = bean.process.trim();
+  const processLabel = processText || "Other";
   const dryingFact = sourced(facts?.drying ?? null);
   const drying: Drying = dryingFact?.value ?? first?.drying ?? GENERIC.drying;
   const daysFact = sourced(facts?.dryingDays ?? null);
   const days: Range = daysFact?.value ?? DRYING_DAYS[process];
   const processedFacts: Fact[] = [
-    profile(onBag, "Process", processLabel),
+    // No process on the bag: claim none, rather than badge a made-up "Other" as this coffee's.
+    ...(processText ? [profile(onBag, "Process", processText)] : []),
     dryingFact ? own("Drying", DRYING[drying], dryingFact.url) : usual("Drying", DRYING[drying]),
     daysFact ? own("Drying time", range(days, "days"), daysFact.url) : usual("Drying time", range(days, "days")),
   ];
@@ -151,7 +154,7 @@ export function buildJourney(result: BrewResult): Journey {
       special: sourced(facts?.special ?? null)?.value ?? null,
       facts: placeFacts,
     },
-    grown: { altitudeM, peak: peakStep(altitudeM?.max ?? null), setting, facts: grownFacts },
+    grown: { altitudeM, peak: peakStep(altitudeM?.max ?? null), setting, producer, facts: grownFacts },
     picked: { method, facts: pickedFacts },
     processed: { process, processLabel, drying, days, facts: processedFacts },
     milled: { wetHulled, facts: milledFacts },

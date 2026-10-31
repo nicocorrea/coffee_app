@@ -29,9 +29,95 @@ describe("stage copy", () => {
   });
   it("names no producer unless researched", () => expect(stageCopy(j, "grown").text).not.toMatch(/farm of|estate|cooperative/i));
 
-  it("names a producer when researched with a source", () => {
-    const r = buildJourney(withFacts({ producer: { name: "Daye Bensa", kind: "washing station", source: "https://example.com/a" } }));
-    expect(stageCopy(r, "grown").text).toContain("Daye Bensa");
+  describe("names a researched producer the way it is involved", () => {
+    const grownText = (name: string, kind: "farm" | "washing station" | "cooperative" | "smallholders") =>
+      stageCopy(buildJourney(withFacts({ producer: { name, kind, source: "https://example.com/a" } })), "grown").text;
+    it("a washing station processed the cherries; it didn't grow them", () => {
+      const t = grownText("Daye Bensa", "washing station");
+      expect(t).toContain("Its cherries were processed at the Daye Bensa washing station.");
+      expect(t).not.toMatch(/grown by/i);
+      expect(grownText("Daye Bensa Washing Station", "washing station")).toContain(
+        "Its cherries were processed at Daye Bensa Washing Station.",
+      );
+    });
+    it("a farm grows it", () => {
+      const t = grownText("Finca La Esperanza", "farm");
+      expect(t).toContain("It is grown at Finca La Esperanza.");
+      expect(t).not.toMatch(/grown by/i);
+    });
+    it("a cooperative is where it comes from", () => {
+      expect(grownText("Kochere", "cooperative")).toContain("It comes from the Kochere cooperative.");
+      expect(grownText("Cooperativa Café Monteverde", "cooperative")).toContain("It comes from Cooperativa Café Monteverde.");
+    });
+    it("smallholders grow it, written mid-sentence", () =>
+      expect(grownText("Smallholder farmers of Hambela Wamena", "smallholders")).toContain(
+        "It is grown by smallholder farmers of Hambela Wamena.",
+      ));
+  });
+
+  describe("alt text matches the drawing", () => {
+    it("the cover is a map with a pin", () => {
+      expect(stageCopy(j, "cover").alt).toMatch(/map[^.]*pin/i);
+      expect(stageCopy(j, "cover").alt).not.toMatch(/bean/i);
+      expect(stageCopy(buildJourney(brew({ origin: "Blend", region: "Brazil, Ethiopia" })), "cover").alt).toMatch(
+        /world map[^.]*pin/i,
+      );
+    });
+    it("the hand-picking scene shows cherries dropping into a basket, no hand", () => {
+      const alt = stageCopy(j, "picked").alt;
+      expect(alt).toMatch(/basket/);
+      expect(alt).not.toMatch(/\bhand\b/i);
+    });
+    it("an anaerobic coffee dries as cherries beside a sealed tank", () => {
+      const alt = stageCopy(buildJourney(brew({ process: "Anaerobic natural" })), "processed").alt;
+      expect(alt).toMatch(/sealed/i);
+      expect(alt).toMatch(/cherries/);
+      expect(alt).not.toMatch(/beans/);
+    });
+    it("a washed or honey coffee is milled out of its parchment, a natural out of its husk", () => {
+      for (const process of ["Washed", "Red Honey"]) {
+        const alt = stageCopy(buildJourney(brew({ process })), "milled").alt;
+        expect(alt, process).toMatch(/parchment/);
+        expect(alt, process).not.toMatch(/husk/);
+      }
+      expect(stageCopy(j, "milled").alt).toMatch(/husk/);
+    });
+    it("the far range follows the altitude", () => {
+      const at = (altitude: string | null) => stageCopy(buildJourney(brew({ altitude })), "grown").alt;
+      expect(at("1,650 m")).toMatch(/mountains/);
+      expect(at("1,650 m")).not.toMatch(/hillside/);
+      expect(at("2,100 m")).toMatch(/tall mountains/);
+      expect(at("800 m")).toMatch(/hills/);
+      expect(at(null)).toMatch(/hillside/);
+    });
+  });
+
+  describe("milling follows the process", () => {
+    const milled = (process: string, confidence: "medium" | "low" = "medium") =>
+      stageCopy(buildJourney({ ...brew({ process }), confidence }), "milled").text;
+    it("a washed or honey coffee arrives as parchment, with no husk", () => {
+      for (const p of ["Washed", "Honey"]) {
+        expect(milled(p), p).not.toMatch(/husk/i);
+        expect(milled(p), p).toMatch(/parchment[^.]*skin/i);
+        expect(milled(p), p).toMatch(/this coffee/);
+      }
+    });
+    it("a natural loses its husk and parchment", () => expect(milled("Natural")).toMatch(/husk[^.]*parchment[^.]*skin/i));
+    it("hedges when the process isn't this coffee's own", () => {
+      for (const p of ["Washed", "Natural"]) {
+        expect(milled(p, "low"), p).not.toMatch(/this coffee/);
+        expect(milled(p, "low"), p).toMatch(/^If /);
+        expect(milled(p, "low"), p).toMatch(/parchment[^.]*skin/i);
+      }
+    });
+    it("an unknown process names no husk", () => expect(milled("")).not.toMatch(/husk/i));
+  });
+
+  it("the cover only mentions sailing when the coffee sails", () => {
+    expect(stageCopy(j, "cover").text).toMatch(/sailing/);
+    const local = buildJourney(withFacts({ roasterCountry: "Ethiopia" }));
+    expect(stageCopy(local, "cover").text).not.toMatch(/sailing/);
+    expect(stageCopy(local, "cover").text).toContain("growing, drying and roasting");
   });
   it("explains wet-hulled in place", () => {
     const w = buildJourney(brew({ process: "Wet-hulled", origin: "Indonesia", region: "Sumatra" }));
@@ -43,6 +129,17 @@ describe("stage copy", () => {
     expect(t).toMatch(/usually|typically|often/i);
     expect(t).not.toContain("This coffee is wet-hulled");
     expect(t).toMatch(/wet-hulled[^.]*(damp|moist)/i);
+  });
+  it("explains parchment wherever it appears, alt text included", () => {
+    for (const process of ["Natural", "Washed", "Honey", "Anaerobic", "Wet-hulled", "Experimental"]) {
+      const jj = buildJourney(brew({ process, origin: process === "Wet-hulled" ? "Indonesia" : "Ethiopia" }));
+      for (const id of jj.stages) {
+        const { text, alt } = stageCopy(jj, id);
+        for (const sentence of `${text} ${alt}`.split(/(?<=\.)\s/)) {
+          if (/parchment/i.test(sentence)) expect(sentence, `${process} ${id}`).toMatch(/skin|shell/i);
+        }
+      }
+    }
   });
   it("uses only <b> markup and fills every stage", () => {
     for (const id of j.stages) {

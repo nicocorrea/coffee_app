@@ -7,6 +7,9 @@ export type ProcessKind = "natural" | "washed" | "honey" | "anaerobic" | "wet-hu
 export type Setting = "forest" | "shade" | "sun";
 export type PickMethod = "hand" | "machine";
 export type Drying = "raised-beds" | "patio" | "mechanical";
+export type ProducerKind = "farm" | "washing station" | "cooperative" | "smallholders";
+/** A researched producer: its badge, plus how it was involved, so the copy can word it truthfully. */
+export type Producer = Fact & { kind: ProducerKind };
 
 export const STAGE_IDS = [
   "cover",
@@ -30,11 +33,12 @@ export type Journey = {
     countryNames: string[];
     region: string | null;
     coords: { lat: number; lon: number } | null;
-    producer: Fact | null;
+    producer: Producer | null;
     special: string | null;
     facts: Fact[];
   };
-  grown: { altitudeM: Range | null; peak: 0 | 1 | 2 | 3 | 4; setting: Setting; facts: Fact[] };
+  // The producer again, so a late-arriving one still reaches an unread Grown stage after the cover was read.
+  grown: { altitudeM: Range | null; peak: 0 | 1 | 2 | 3 | 4; setting: Setting; producer: Producer | null; facts: Fact[] };
   picked: { method: PickMethod; facts: Fact[] };
   processed: { process: ProcessKind; processLabel: string; drying: Drying; days: Range; facts: Fact[] };
   milled: { wetHulled: boolean; facts: Fact[] };

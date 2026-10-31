@@ -1,6 +1,6 @@
 import { photoFor } from "@/lib/tasting-notes";
 import type { RoastLevel } from "@/lib/schema";
-import type { Drying, Fact, Journey, ProcessKind, Range, StageId } from "./types";
+import type { Drying, Fact, Journey, ProcessKind, Producer, Range, StageId } from "./types";
 
 // Plain strings. `<b>` is the only markup; the UI splits on it and never uses dangerouslySetInnerHTML.
 // Wording follows provenance: a sentence about a "usual" fact says "usually" or "typically".
@@ -105,20 +105,63 @@ function place(j: Journey): string {
 
 function cover(j: Journey) {
   const where = place(j);
+  // A coffee roasted where it grew skips the Shipped stage, so it never sails.
+  const steps = j.stages.includes("shipped") ? "growing, drying, sailing and roasting" : "growing, drying and roasting";
+  const n = j.place.countryKeys.length;
   return {
     step: "The journey of",
     title: j.coffeeName,
-    text: `From ${where} to the cup in your hand: months of growing, drying, sailing and roasting, and dozens of hands along the way.`,
-    alt: `A coffee bean sitting on a map near ${where}.`,
+    text: `From ${where} to the cup in your hand: months of ${steps}, and dozens of hands along the way.`,
+    alt:
+      n > 1
+        ? `A world map with a pin on each country in the blend: ${join(j.place.countryNames)}.`
+        : n === 1
+          ? `A map of ${j.place.countryNames[0]} with a pin near ${where}.`
+          : `A pin marking where the coffee grows${where === "far away" ? "" : `, ${where}`}.`,
   };
 }
 
+// Generic words that open a smallholders' name ("Smallholder farmers of …") read lower-case mid-sentence.
+const COMMON_START = /^(smallholders?|small-scale|small|local|family|families|farmers?|growers?|producers?)\b/i;
+
+/** Who or what the researched producer is, worded for how it was involved. */
+function producerSentence(p: Producer): string {
+  const name = p.value.trim();
+  switch (p.kind) {
+    case "farm":
+      return `It is grown at ${name}.`;
+    case "washing station":
+      return /washing station/i.test(name)
+        ? `Its cherries were processed at ${name}.`
+        : `Its cherries were processed at the ${name} washing station.`;
+    case "cooperative":
+      return /co-?op|cooperativ|union/i.test(name) ? `It comes from ${name}.` : `It comes from the ${name} cooperative.`;
+    case "smallholders":
+      return `It is grown by ${COMMON_START.test(name) ? lower(name) : name}.`;
+  }
+}
+
+// What the far range is drawn as, by altitude step (see GrownArt's ridgeFor).
+const LAND: Record<Journey["grown"]["peak"], string> = {
+  0: "on a hillside",
+  1: "among low rolling hills",
+  2: "below a range of mountains",
+  3: "below a range of mountains",
+  4: "below tall mountains",
+};
+
+const SETTING_ALT: Record<Journey["grown"]["setting"], string> = {
+  forest: "in the shade of tall forest trees",
+  shade: "under shade trees",
+  sun: "in open sun",
+};
+
 function grown(j: Journey) {
-  const { setting, altitudeM } = j.grown;
+  const { setting } = j.grown;
   const setFact = fact(j.grown.facts, "Setting");
   const own = isOwn(setFact);
   const sentences: string[] = [];
-  if (j.place.producer) sentences.push(`It is grown by ${j.place.producer.value}.`);
+  if (j.grown.producer) sentences.push(producerSentence(j.grown.producer));
   const where =
     setting === "forest"
       ? "in the shade of tall forest trees"
@@ -134,12 +177,11 @@ function grown(j: Journey) {
         : `It grows at ${alt.value}, where cool nights make the cherries ripen slowly and build up <b>more sugar</b>.`,
     );
   }
-  const high = (altitudeM?.max ?? 0) >= 1800;
   return {
     step: "",
     title: "Where the cherries ripen",
     text: sentences.join(" "),
-    alt: `Coffee trees growing ${setting === "sun" ? "in open sun" : "in shade"} on a ${high ? "high mountain" : "hillside"} slope.`,
+    alt: `Coffee trees growing ${SETTING_ALT[setting]}, ${LAND[j.grown.peak]}.`,
   };
 }
 
@@ -170,10 +212,20 @@ function picked(j: Journey) {
     text: s.join(" "),
     alt:
       j.picked.method === "hand"
-        ? "A hand picking red cherries from a branch into a basket."
+        ? "Ripe red cherries on a branch, dropping one by one into a basket."
         : "A harvesting machine passing over a row of coffee trees.",
   };
 }
+
+// What ProcessedArt draws: its step before drying (if any), then what dries, and where.
+const PROCESSED_ALT: Record<ProcessKind, (where: string) => string> = {
+  natural: (w) => `Whole red cherries drying ${w}, darkening day by day.`,
+  anaerobic: (w) => `A sealed steel tank where the cherries ferment, then the whole cherries drying ${w}.`,
+  washed: (w) => `A pulper stripping off the fruit into a water tank, then the beans drying ${w}.`,
+  honey: (w) => `Beans in a sticky amber coat of fruit, drying ${w}.`,
+  "wet-hulled": (w) => `A huller stripping the damp papery skin, then dark green beans drying ${w}.`,
+  other: (w) => `Coffee beans drying ${w}.`,
+};
 
 function processed(j: Journey) {
   const kind = j.processed.process;
@@ -202,23 +254,44 @@ function processed(j: Journey) {
     step: "",
     title: titles[kind],
     text: s.join(" "),
-    alt:
-      kind === "washed"
-        ? "Beans soaking in water tanks, then spread out to dry."
-        : `Coffee ${kind === "natural" ? "cherries" : "beans"} spread out to dry ${DRYING_PHRASE[j.processed.drying]}.`,
+    alt: PROCESSED_ALT[kind](DRYING_PHRASE[j.processed.drying]),
   };
 }
 
+const SEEDS = "Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet.";
+
 function milled(j: Journey) {
+  const kind = j.processed.process;
   const processOwn = isOwn(fact(j.processed.facts, "Process"));
-  const text = j.milled.wetHulled
-    ? `${processOwn ? "This coffee is wet-hulled" : "Coffee from here is often wet-hulled"}, which means the parchment, the thin papery skin around each bean, is usually stripped off while the bean is still damp, before it is fully dry. Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet.`
-    : "Once dry, the hard husk and the parchment, a thin papery skin around each bean, are usually cracked off at a dry mill. Inside are two green seeds facing each other. They smell like grass and peas, and none of the coffee flavour exists yet.";
+  // Matches MilledArt: washed and honey coffees reach the mill as parchment (their fruit came off
+  // before drying); naturals and anaerobics as a dried husk. Unhedged only when the process is own.
+  const parchment = kind === "washed" || kind === "honey";
+  let first: string;
+  if (j.milled.wetHulled) {
+    first = `${processOwn ? "This coffee is wet-hulled" : "Coffee from here is often wet-hulled"}, which means the parchment, the thin papery skin around each bean, is usually stripped off while the bean is still damp, before it is fully dry.`;
+  } else if (parchment) {
+    // Washed: the fruit is all gone before drying. Honey: the skin is, and the sticky fruit dries onto the parchment.
+    const off = kind === "washed" ? "fruit" : "outer skin";
+    first = processOwn
+      ? `Its ${off} came off before drying, so this coffee reaches the dry mill in its parchment, a thin papery skin around each bean, which is usually cracked off there.`
+      : `If its ${off} came off before drying, as in a ${kind} coffee, it usually reaches the dry mill in its parchment, a thin papery skin around each bean, which is cracked off there.`;
+  } else if (kind === "natural" || kind === "anaerobic") {
+    first = processOwn
+      ? "Once dry, the hard husk of dried fruit and the parchment, a thin papery skin around each bean, are usually cracked off at a dry mill."
+      : "If it dried inside its fruit, as in a natural, the hard husk and the parchment, a thin papery skin around each bean, are usually cracked off together at a dry mill.";
+  } else {
+    first = "Once dry, the outer layers around each bean, down to the parchment (a thin papery skin), are usually cracked off at a dry mill.";
+  }
+  const shell = j.milled.wetHulled
+    ? "its damp parchment, the papery skin,"
+    : parchment
+      ? "its parchment, the pale papery skin,"
+      : "its dried husk";
   return {
     step: "",
     title: "Out of its shell",
-    text,
-    alt: "A bean splitting out of its husk to show two green seeds.",
+    text: `${first} ${SEEDS}`,
+    alt: `A bean splitting out of ${shell} to show two green seeds.`,
   };
 }
 

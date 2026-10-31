@@ -103,9 +103,11 @@ test("background research started on the coffee page finishes inside the journey
   const stored = () =>
     page.evaluate(() => !!JSON.parse(localStorage.getItem("crema:lookups")!)[0].result.journey);
   await expect.poll(stored, { timeout: 8000 }).toBe(true);
-  // The reader hasn't reached the Grown stage yet, so it picks up the researched setting.
+  // The reader hasn't reached the Grown stage yet, so it picks up the researched facts.
   const grown = page.getByRole("region", { name: "Where the cherries ripen" });
   await expect(grown.locator('[data-provenance="own"]', { hasText: "Forest shade" })).toHaveCount(1);
+  // The cover was already read, but its producer still reaches the unread Grown stage.
+  await expect(grown).toContainText("It is grown by smallholder farmers of Hambela Wamena.");
   await page.getByRole("button", { name: "Close" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
   await page.waitForTimeout(800);
