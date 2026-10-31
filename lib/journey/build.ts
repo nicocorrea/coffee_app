@@ -84,7 +84,7 @@ export function buildJourney(result: BrewResult): Journey {
   if (harvest) pickedFacts.push(own("Harvest", harvest.value, harvest.url));
 
   // Processed
-  const process = processKind(bean.process);
+  const process = processKind(bean.process, first?.key);
   const processLabel = bean.process.trim() || "Other";
   const dryingFact = sourced(facts?.drying ?? null);
   const drying: Drying = dryingFact?.value ?? first?.drying ?? GENERIC.drying;

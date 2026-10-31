@@ -86,11 +86,10 @@ function escapeRe(s: string): string {
 
 // Longest names first, so "Papua New Guinea" wins over a shorter alias.
 const MATCHERS = COUNTRIES.flatMap((c) =>
-  [c.name, ...c.aliases].map((term) => ({
-    country: c,
-    len: norm(term).length,
-    re: new RegExp(`(^| )${escapeRe(norm(term))}( |$)`),
-  })),
+  [c.name, ...c.aliases].map((term) => {
+    const source = `(?<=^| )${escapeRe(norm(term))}(?= |$)`;
+    return { country: c, len: norm(term).length, re: new RegExp(source), every: new RegExp(source, "g") };
+  }),
 ).sort((a, b) => b.len - a.len);
 
 export function countryFor(text: string | null): CountryInfo | null {
@@ -100,14 +99,26 @@ export function countryFor(text: string | null): CountryInfo | null {
   return MATCHERS.find((m) => m.re.test(t))?.country ?? null;
 }
 
+/**
+ * Every country named in the text, in the order written, once each: "Brazil-Colombia",
+ * "Brazil · Ethiopia", "Brazil with Ethiopia". A longer name claims its words before a shorter one.
+ */
+function countriesNamed(text: string): CountryInfo[] {
+  const t = norm(text);
+  const taken: { start: number; end: number; country: CountryInfo }[] = [];
+  for (const m of MATCHERS) {
+    for (const hit of t.matchAll(m.every)) {
+      const start = hit.index;
+      const end = start + hit[0].length;
+      if (!taken.some((x) => start < x.end && x.start < end)) taken.push({ start, end, country: m.country });
+    }
+  }
+  return [...new Set(taken.sort((a, b) => a.start - b.start).map((x) => x.country))];
+}
+
 export function countriesIn(origin: string, region: string | null): CountryInfo[] {
   const isBlend = /^\s*blend\s*$/i.test(origin);
-  const source = isBlend ? (region ?? "") : origin;
-  const out: CountryInfo[] = [];
-  for (const part of source.split(/,|&|\/|\+|\band\b/i)) {
-    const c = countryFor(part);
-    if (c && !out.includes(c)) out.push(c);
-  }
+  const out = countriesNamed(isBlend ? (region ?? "") : origin);
   if (out.length === 0 && !isBlend) {
     const c = countryFor(region);
     if (c) out.push(c);

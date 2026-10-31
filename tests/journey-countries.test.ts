@@ -18,6 +18,19 @@ describe("journey countries", () => {
     expect(countriesIn("Ethiopia", "Guji").map((c) => c.key)).toEqual(["ETH"]);
   });
 
+  it.each([
+    ["Brazil-Colombia", null, ["BRA", "COL"]],
+    ["Blend", "Brazil-Ethiopia", ["BRA", "ETH"]],
+    ["Blend", "Brazil · Ethiopia", ["BRA", "ETH"]],
+    ["Blend", "Brazil; Colombia; Ethiopia", ["BRA", "COL", "ETH"]],
+    ["Blend", "Brazil with Ethiopia", ["BRA", "ETH"]],
+    ["Blend", "Colombia (Huila), Brazil (Cerrado)", ["COL", "BRA"]],
+    ["Blend", "Papua New Guinea & Ethiopia", ["PNG", "ETH"]],
+    ["Indonesia (Sumatra)", null, ["IDN"]],
+  ])("finds every country in %j / %j, in order", (origin, region, keys) =>
+    expect(countriesIn(origin, region).map((c) => c.key)).toEqual(keys),
+  );
+
   it("covers the spec's 27 producers, each complete", () => {
     expect(COUNTRIES).toHaveLength(27);
     for (const c of COUNTRIES) {

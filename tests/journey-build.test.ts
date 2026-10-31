@@ -91,6 +91,24 @@ describe("buildJourney", () => {
   it("blends list every country", () =>
     expect(buildJourney(brew({ origin: "Blend", region: "Brazil, Ethiopia" })).place.countryKeys).toEqual(["BRA", "ETH"]));
 
+  it("semi-washed is wet-hulled only where wet-hulling is the norm", () => {
+    const sumatra = buildJourney(brew({ origin: "Indonesia", region: "Sumatra", process: "Semi-washed" }));
+    expect(sumatra.processed.process).toBe("wet-hulled");
+    expect(sumatra.milled.wetHulled).toBe(true);
+    const brazil = buildJourney(brew({ origin: "Brazil", process: "Semi-washed" }));
+    expect(brazil.processed.process).toBe("honey");
+    expect(brazil.milled.wetHulled).toBe(false);
+  });
+
+  it("blends written with dashes find every country", () =>
+    expect(buildJourney(brew({ origin: "Brazil-Colombia", region: null })).place.countryKeys).toEqual(["BRA", "COL"]));
+
+  it("altitude in metres and feet reads the metres", () =>
+    expect(buildJourney(brew({ altitude: "1,800–2,000 masl (5,900–6,560 ft)" })).grown).toMatchObject({
+      altitudeM: { min: 1800, max: 2000 },
+      peak: 4,
+    }));
+
   it("unknown country builds a generic journey", () => expect(buildJourney(brew({ origin: "Atlantis" })).shipped.port).toBeNull());
 });
 
