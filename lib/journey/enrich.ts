@@ -21,17 +21,24 @@ export function attachJourney(result: BrewResult, facts: JourneyFacts, now: Date
   return enriched;
 }
 
-/** Research the lot once per mounted result, quietly; nothing is shown if it fails. */
+// Lookups being researched (or already researched) in this tab, by bean and lookup. Module-level, so
+// a screen being hidden or unmounted (Next keeps /bean alive, hidden, while the journey is open) never
+// cancels the request or starts it again: the facts land in the store whichever screen is showing.
+const researching = new Set<string>();
+
+/** Research the lot in the background, once per lookup; nothing is shown if it fails. */
+export function startEnrichment(result: BrewResult): void {
+  if (!shouldEnrich(result)) return;
+  const id = `${favKey(result)}|${result.createdAt}`;
+  if (researching.has(id)) return;
+  researching.add(id);
+  void requestJourney(result).then((facts) => {
+    if (facts) attachJourney(result, facts);
+    else researching.delete(id); // failed: try again the next time the coffee is opened
+  });
+}
+
+/** Start the background research for the coffee on screen. Pass the stored copy, so arrived facts stop it. */
 export function useJourneyEnrichment(result: BrewResult) {
-  const eligible = shouldEnrich(result);
-  useEffect(() => {
-    if (!eligible) return;
-    const controller = new AbortController();
-    requestJourney(result, controller.signal).then((facts) => {
-      if (facts && !controller.signal.aborted) attachJourney(result, facts);
-    });
-    return () => controller.abort();
-    // Once per coffee and lookup, not on every re-render of the same result.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eligible, favKey(result), result.createdAt]);
+  useEffect(() => startEnrichment(result), [result]);
 }

@@ -30,6 +30,90 @@ test("researches the journey once in the background for a roaster's coffee", asy
   expect(calls).toBe(1);
 });
 
+// Next keeps /bean alive (hidden) while the journey is open, so its effects stop and start again around it.
+test("going into the journey and back never researches the coffee again", async ({ page }) => {
+  let brews = 0;
+  let journeys = 0;
+  await page.route("**/api/brew", async (r) => {
+    brews++;
+    const res = await r.fetch();
+    const body = await res.json();
+    body.bean.roaster = "Demo Roasters"; // a roaster's coffee, so its journey is researched too
+    await r.fulfill({ response: res, json: body });
+  });
+  await page.route("**/api/journey", (r) => {
+    journeys++;
+    return r.continue();
+  });
+  const recipe = page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" });
+  await page.goto("/bean?q=Guji");
+  await expect(recipe).toBeVisible();
+  for (let trip = 0; trip < 2; trip++) {
+    await page.getByRole("link", { name: "Discover its journey" }).first().click();
+    await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(recipe).toBeVisible();
+  }
+  await page.waitForTimeout(800);
+  expect(brews).toBe(1);
+  expect(journeys).toBe(1);
+});
+
+test("leaving the coffee page mid-research and coming back doesn't pay for it twice", async ({ page }) => {
+  let brews = 0;
+  await page.route("**/api/brew", async (r) => {
+    brews++;
+    await new Promise((done) => setTimeout(done, 1500));
+    await r.continue().catch(() => {});
+  });
+  await page.goto("/bean?q=Guji");
+  await expect.poll(() => brews).toBe(1); // hydrated and researching
+  await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Guide" }).click();
+  await expect(page).toHaveURL(/\/guide/);
+  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  expect(brews).toBe(1);
+});
+
+test("background research started on the coffee page finishes inside the journey and is kept", async ({ page }) => {
+  let journeys = 0;
+  await page.goto("/bean?q=Guji");
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  let brews = 0;
+  await page.route("**/api/brew", (r) => {
+    brews++;
+    return r.continue();
+  });
+  // Slow research, so the reader is already inside the journey when it lands.
+  await page.route("**/api/journey", async (r) => {
+    journeys++;
+    await new Promise((done) => setTimeout(done, 3000));
+    await r.continue().catch(() => {});
+  });
+  await page.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem("crema:lookups")!);
+    l[0].result.bean.roaster = "Demo Roasters";
+    localStorage.setItem("crema:lookups", JSON.stringify(l));
+  });
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  await expect.poll(() => journeys).toBe(1);
+  await page.getByRole("link", { name: "Discover its journey" }).first().click();
+  await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
+  const stored = () =>
+    page.evaluate(() => !!JSON.parse(localStorage.getItem("crema:lookups")!)[0].result.journey);
+  await expect.poll(stored, { timeout: 8000 }).toBe(true);
+  // The reader hasn't reached the Grown stage yet, so it picks up the researched setting.
+  const grown = page.getByRole("region", { name: "Where the cherries ripen" });
+  await expect(grown.locator('[data-provenance="own"]', { hasText: "Forest shade" })).toHaveCount(1);
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Guji Hambela Natural" })).toBeVisible();
+  await page.waitForTimeout(800);
+  expect(await stored()).toBe(true);
+  expect(journeys).toBe(1);
+  expect(brews).toBe(0);
+});
+
 // The journey only reads what is already on the device, so each test looks the coffee up first.
 async function seed(page: Page) {
   await page.goto("/bean?q=Guji");

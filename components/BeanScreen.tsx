@@ -1,10 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAccessCode, getCachedResult, requestBrew, type BrewOutcome } from "@/lib/api";
 import { favKey, useFavourites } from "@/lib/favourites";
-import { rememberLookup } from "@/lib/history";
+import { touchLookup } from "@/lib/history";
 import type { BrewResult } from "@/lib/schema";
 import { AccessGate, ErrorState, LoadingStages, NotIdentified } from "./BrewStates";
 import { BrewView } from "./BrewView";
@@ -56,21 +56,35 @@ function SavedBean({ id }: { id: string }) {
 type LookupProps = { query: string; fresh: boolean; onRetry: () => void; onRefresh: () => void };
 
 function Lookup({ query, fresh, onRetry, onRefresh }: LookupProps) {
-  const [cached] = useState(() => (fresh ? null : getCachedResult(query)));
-  const [state, setState] = useState<State>(cached ? { kind: "done", result: cached } : { kind: "loading" });
+  const [state, setState] = useState<State>(() => {
+    const cached = fresh ? null : getCachedResult(query);
+    return cached ? { kind: "done", result: cached } : { kind: "loading" };
+  });
   const [hadCode] = useState(() => getAccessCode() !== "");
+  // Next keeps this page alive but hidden while another route shows (the journey, Saved…), and its
+  // effects run again each time it is shown. Refs survive that, so the paid research runs once.
+  const settled = useRef(false);
+  const pending = useRef<Promise<BrewOutcome> | null>(null);
 
   useEffect(() => {
-    if (cached) {
-      rememberLookup(query, cached); // move it to the top of Recent
+    if (settled.current) return;
+    if (state.kind === "done") {
+      settled.current = true;
+      touchLookup(query, state.result); // move it to the top of Recent, keeping what's stored
       return;
     }
-    const controller = new AbortController();
-    requestBrew(query, controller.signal)
-      .then((o) => setState(o.ok ? { kind: "done", result: o.result } : { kind: "error", ...o }))
-      .catch(() => {});
-    return () => controller.abort();
-  }, [query, cached]);
+    // Not aborted when hidden: the research is paid for either way, and its result is kept on the device.
+    pending.current ??= requestBrew(query);
+    let shown = true;
+    pending.current.then((o) => {
+      if (!shown) return;
+      settled.current = true;
+      setState(o.ok ? { kind: "done", result: o.result } : { kind: "error", ...o });
+    });
+    return () => {
+      shown = false;
+    };
+  }, [query, state]);
 
   if (state.kind === "loading") return <LoadingStages query={query} />;
   if (state.kind === "error") {

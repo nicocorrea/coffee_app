@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { getCachedResult } from "@/lib/api";
 import { findFavourite, useFavourites } from "@/lib/favourites";
 import { useLookups } from "@/lib/history";
 import { buildJourney, mergeUnvisited } from "@/lib/journey/build";
+import { startEnrichment } from "@/lib/journey/enrich";
 import type { Journey, StageId } from "@/lib/journey/types";
 import type { BrewResult } from "@/lib/schema";
 import { DesktopStory } from "./DesktopStory";
@@ -42,6 +43,12 @@ function CoffeeJourney({ q, saved }: { q: string; saved: string | null }) {
   const desktop = useIsDesktop();
   const [visited, setVisited] = useState<ReadonlySet<StageId>>(() => new Set());
   const [shown, setShown] = useState<{ from: BrewResult; journey: Journey } | null>(null);
+
+  // Research still missing (opened straight from a link, or it failed earlier) starts here too. It is
+  // shared with the coffee page, so a request already running is joined rather than sent again.
+  useEffect(() => {
+    if (live) startEnrichment(live);
+  }, [live]);
 
   // A newer copy of the coffee (researched facts arrived) updates only the stages not yet read.
   if (hydrated && live && live !== shown?.from) {

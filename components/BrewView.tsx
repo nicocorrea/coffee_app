@@ -6,6 +6,7 @@ import { clampPreinfusion, type BrewResult } from "@/lib/schema";
 import { JourneyCard } from "./journey/JourneyCard";
 import { useJourneyEnrichment } from "@/lib/journey/enrich";
 import { favKey, toggleFavourite, useFavourites } from "@/lib/favourites";
+import { useStoredCopy } from "@/lib/history";
 import { safeSources } from "@/lib/sources";
 import { BeanName } from "./BeanName";
 import { DrinkPicker } from "./DrinkPicker";
@@ -37,7 +38,7 @@ const lookedUp = (iso: string) =>
 
 /** `onRefresh` offers to research the coffee again instead of using what's stored on the device. */
 export function BrewView({
-  result,
+  result: shown,
   onRefresh,
   journeyHref,
 }: {
@@ -45,6 +46,9 @@ export function BrewView({
   onRefresh?: () => void;
   journeyHref?: string;
 }) {
+  // Background research lands on the device's copy, not on the one this screen first read: show
+  // (and research from) the stored copy, so arrived facts are kept and never fetched twice.
+  const result = useStoredCopy(shown);
   useJourneyEnrichment(result);
   const journeyLink = journeyHref ?? `/journey?q=${encodeURIComponent(result.query)}`;
   const saved = useFavourites().some((r) => favKey(r) === favKey(result));
