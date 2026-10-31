@@ -32,4 +32,16 @@ describe("journey countries", () => {
 
   it("Ethiopia defaults to forest, raised beds, hand picking", () =>
     expect(countryFor("Ethiopia")).toMatchObject({ setting: "forest", drying: "raised-beds", picking: "hand" }));
+
+  it("countries sharing a port share the same sea time", () => {
+    const byPort = new Map<string, string>();
+    for (const c of COUNTRIES) {
+      const range = `${c.seaWeeksToEurope.min}-${c.seaWeeksToEurope.max}`;
+      expect(byPort.get(c.port) ?? range, c.port).toBe(range);
+      byPort.set(c.port, range);
+    }
+  });
+
+  it("Colombia ships from Cartagena in 2-4 weeks", () =>
+    expect(countryFor("Colombia")).toMatchObject({ port: "Cartagena", seaWeeksToEurope: { min: 2, max: 4 } }));
 });
