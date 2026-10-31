@@ -8,7 +8,7 @@ export const PROVENANCE_MEANING: Record<Provenance, string> = {
 
 const STYLE: Record<Provenance, string> = {
   own: "bg-cascara text-white",
-  usual: "bg-surface-2 text-muted",
+  usual: "bg-surface-2 text-muted-strong", // muted, darkened to reach 4.5:1 on surface-2 (R9)
   advice: "border border-line text-ink",
 };
 

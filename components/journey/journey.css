@@ -515,6 +515,7 @@
   --color-paper: #2a1c15;
   --color-ink: #fbf8f5;
   --color-muted: #cbb9a8;
+  --color-muted-strong: #cbb9a8;
   --color-line: #4a3328;
   --color-surface-2: rgb(251 248 245 / 0.12);
   color: var(--color-ink);
