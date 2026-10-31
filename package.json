@@ -24,13 +24,13 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "d3-geo": "^3.1.1",
+    "d3-geo": "3.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
-    "topojson-client": "^3.1.0",
+    "topojson-client": "3.1.0",
     "typescript": "^5",
     "vitest": "^5.0.5",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "2.0.2"
   }
 }
