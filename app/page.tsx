@@ -1,3 +1,4 @@
+import { FilmSection } from "@/components/FilmSection";
 import { RecentList } from "@/components/RecentList";
 import { SavedList } from "@/components/SavedList";
 import { SearchBox } from "@/components/SearchBox";
@@ -17,7 +18,9 @@ export default function Home() {
           <SearchBox />
         </div>
       </div>
-      <div className="lg:flex lg:flex-col lg:gap-12 lg:pt-3">
+      {/* After the search on phones; a full-width band under both columns on desktop. */}
+      <FilmSection />
+      <div className="lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:gap-12 lg:pt-3">
         <SavedList variant="strip" />
         <RecentList />
       </div>
